@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ELW-Check
 // @version      1.0.0
-// @author       Allure149
+// @author       Allure149 exklusiv fuer den Verband Bundesweiter KatSchutz (Bund)
 // @include      *://leitstellenspiel.de/missions/*
 // @include      *://www.leitstellenspiel.de/missions/*
 // @grant        none
