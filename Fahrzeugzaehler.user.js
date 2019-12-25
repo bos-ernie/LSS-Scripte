@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fahrzeugzaehler
-// @version      2.0.0
+// @version      2.0.1
 // @author       Allure149
 // @description  Zaehlt die Fahrzeuge auf Anfahrt und vor Ort von jedem am Einsatz teilnehmenden Kameraden
 // @include      *://leitstellenspiel.de/missions/*
@@ -36,6 +36,7 @@ $(function() {
         let outputText = "";
         let strName = "";
         let ownId = "";
+        arrNames = [];
 
         $("#mission_vehicle_driving >> tr, #mission_vehicle_at_mission >> tr").each(function() {
             if($(this).find("a[href^='/profile/']:first").attr("href") === undefined) return true;
