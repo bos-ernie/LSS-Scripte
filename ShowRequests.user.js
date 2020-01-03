@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.0.0
+// @version      1.1.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://www.leitstellenspiel.de/*
@@ -32,10 +32,22 @@
 
     function saCreateTable(arrSaMissions){
         let strOutput = "<table>";
+        let statusVal = -1;
+            console.log("3");
 
         for(let i = 0; i < arrSaMissions.length; i++){
-            strOutput += `<tr><td>${arrSaMissions[i].missionAdress}</td><td><a href="/missions/${arrSaMissions[i].missionId}" class="btn btn-default btn-xs lightbox-open" id="alarm_button_${arrSaMissions[i].missionId}"> Alarm</a></td></tr>`;
+            switch(arrSaMissions[i].status){
+                case 0: statusVal = "warning"
+                    break;
+                case 1: statusVal = "success"
+                    break;
+                case 2: statusVal = "danger"
+                    break;
+                default: statusVal = "default";
+            }
+            strOutput += `<tr class="alert alert-${statusVal}"><td>${arrSaMissions[i].missionAdress}</td><td><a href="/missions/${arrSaMissions[i].missionId}" class="btn btn-default btn-xs lightbox-open" id="alarm_button_${arrSaMissions[i].missionId}"> Alarm</a></td></tr>`;
         }
+            console.log("4");
 
         strOutput += "</table>";
 
@@ -43,15 +55,26 @@
     }
 
     function saDoWork(){
-        let speakRequest = [];
+        let speakRequest = []; // status 0 = nur Patienten, 1 = nur Gefangene, 2 = Gefangene und Patienten
         $(".missionSideBarEntry").each(function() {
             let $this = $(this);
-            let requestText = $this.find("div[id^='mission_missing_short']").text();
+            if(($this).hasClass("mission_deleted")) return true;
+
             let missionId = parseInt($this.attr("mission_id"));
-            let missionAdress = $this.find("a[id^='mission_caption']").text().trim().replace("[Verband]", "");
+            let requestPrisoners = $this.find("#mission_prisoners_" + missionId).text();
+            let requestPatients = $this.find("#mission_patients_" + missionId).text();
+            let requestText = $this.find("#mission_missing_short_" + missionId).text();
+            let missionAdress = $this.find("#mission_caption_" + missionId).text().replace("[Verband] ", "");
+            let status = -1;
 
             if(requestText.indexOf("Sprechwunsch") >= 0) {
-                speakRequest.push({"missionId": missionId, "missionAdress": missionAdress});
+                console.log(requestPrisoners + " => " + requestPatients + " => " + requestText + " => " + missionAdress);
+                if(requestPatients && requestPrisoners) status = 2;
+                else if(requestPatients) status = 0;
+                else if(requestPrisoners) status = 1;
+                else status = -1;
+
+                speakRequest.push({"missionId": missionId, "missionAdress": missionAdress, "status": status});
             }
         });
         $("#saBody").html(saCreateTable(speakRequest));
