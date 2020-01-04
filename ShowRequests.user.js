@@ -1,9 +1,10 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.2.0
+// @version      1.3.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://www.leitstellenspiel.de/*
+// @updateURL    https://github.com/types140/LSS-Scripte/raw/master/ShowRequests.user.js
 // @grant        none
 // ==/UserScript==
 /* global $ */
@@ -179,6 +180,10 @@
 
                     $("#missionTime_" + item.missionId).text(missionTime.replace(" Uhr", ""));
                     $("#countSw_" + item.missionId).text($this.find(".building_list_fms_5").length);
+
+                    if($this.find("#mission_bar_" + item.missionId).css("width") == "0%"){
+                        $("#countSw_" + item.missionId).append(` <div class="glyphicon glyphicon-ok"></div>`);
+                    }
                 });
             }, key * 500);
         });
