@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.4.0
+// @version      1.5.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://www.leitstellenspiel.de/*
@@ -84,7 +84,7 @@
                                      <th class="col-4">Einsatzbezeichnung</th>
                                      <th class="col-4">Einsatzadresse</th>
                                      <th class="col-3" scope="row">Einsatzbeginn</th>
-                                     <th class="col">Anzahl SW</th>
+                                     <th class="col">SW</th>
                                      <th class="col"></th>
                                  </tr>
                              </div>`;
@@ -125,7 +125,7 @@
 
     function saDoWork(){
         let speakRequest = [];
-        $(".missionSideBarEntry").each(function() {
+        $("#mission_list_alliance > .missionSideBarEntry").each(function() {
             let $this = $(this);
                 if($this.hasClass("mission_deleted")) return true;
 
@@ -189,7 +189,8 @@
                             let hoursSinceStart = timeSinceStart.getHours();
                             let minsSinceStart = timeSinceStart.getMinutes();
 
-                            $("#missionTime_" + item.missionId).html(`${missionTime.replace(" Uhr", "")}<br/>vor ${hoursSinceStart}h ${minsSinceStart}m`);
+                            $("#missionTime_" + item.missionId).html(`<span title="vor ${hoursSinceStart-1}h ${minsSinceStart}m">${missionTime.replace(" Uhr", "")}</span>`);
+
                             $("#countSw_" + item.missionId).text($this.find(".building_list_fms_5").length);
 
                             if($this.find("#mission_bar_" + item.missionId).css("width") == "0%"){
