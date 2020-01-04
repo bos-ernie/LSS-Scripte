@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.3.0
+// @version      1.4.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://www.leitstellenspiel.de/*
@@ -20,7 +20,7 @@
                                  overflow-y: auto;
                              }
                              .modal-lg {
-                                 width: 1000px !important;
+                                 width: 1024px !important;
                              }
                       </style>`);
     $("#btn-group-mission-select").before(`<a href="#"
@@ -56,6 +56,15 @@
                             </div>
                             <div class="modal-body" id="saBody"></div>
                             <div class="modal-footer">
+                                <div class="pull-left">Legende:
+                                    <span class="alert alert-warning" style="padding: 2px 5px; margin:0 5px;">Patienten</span>
+                                    <span class="alert alert-success" style="padding: 2px 5px; margin:0 5px;">Gefangene</span>
+                                    <span class="alert alert-danger" style="padding: 2px 5px; margin:0 5px;">beides</span>
+                                    <span class="alert" style="padding: 2px 5px; margin:0 5px; background-color: #e5e8e8;">
+                                        <div class="glyphicon glyphicon-ok"></div> Einsatz erledigt
+                                    </span>
+                                    <span class="alert alert-info" style="padding: 2px 5px; margin:0 5px;">Einsatz älter als 3 Stunden</span>
+                                </div>
                                 <button type="button"
                                         class="btn btn-secondary"
                                         data-dismiss="modal"
@@ -74,7 +83,7 @@
                                  <tr>
                                      <th class="col-4">Einsatzbezeichnung</th>
                                      <th class="col-4">Einsatzadresse</th>
-                                     <th class="col-3">Einsatzbeginn</th>
+                                     <th class="col-3" scope="row">Einsatzbeginn</th>
                                      <th class="col">Anzahl SW</th>
                                      <th class="col"></th>
                                  </tr>
@@ -103,7 +112,7 @@
                                       <a href="/missions/${arrSaMissions[i].missionId}"
                                          class="btn btn-default btn-xs lightbox-open"
                                          id="sa_alarm_button_${arrSaMissions[i].missionId}">
-                                          Alarm
+                                          Anzeigen
                                       </a>
                                   </td>
                               </tr>
@@ -115,7 +124,7 @@
     }
 
     function saDoWork(){
-        let speakRequest = []; // status 0 = nur Patienten, 1 = nur Gefangene, 2 = Gefangene und Patienten
+        let speakRequest = [];
         $(".missionSideBarEntry").each(function() {
             let $this = $(this);
                 if($this.hasClass("mission_deleted")) return true;
@@ -128,7 +137,8 @@
                 let missionName = $("#mission_address_" + missionId).map(function(){
                     return this.previousSibling.nodeValue.replace("[Verband] ", "").replace(", ", "");
                 });
-                let status = -1;
+
+                let status = -1; // status 0 = nur Patienten, 1 = nur Gefangene, 2 = Gefangene und Patienten
 
                 if(requestText.indexOf("Sprechwunsch") >= 0) {
                     if(requestPatients && requestPrisoners) status = 2;
@@ -174,15 +184,19 @@
                             if(calcDifference > 10800000){
                                 $("#sa_alarm_button_" + item.missionId).toggleClass("btn-default btn-info");
                             };
+
+                            let timeSinceStart = new Date(calcDifference);
+                            let hoursSinceStart = timeSinceStart.getHours();
+                            let minsSinceStart = timeSinceStart.getMinutes();
+
+                            $("#missionTime_" + item.missionId).html(`${missionTime.replace(" Uhr", "")}<br/>vor ${hoursSinceStart}h ${minsSinceStart}m`);
+                            $("#countSw_" + item.missionId).text($this.find(".building_list_fms_5").length);
+
+                            if($this.find("#mission_bar_" + item.missionId).css("width") == "0%"){
+                                $("#countSw_" + item.missionId).append(` <div class="glyphicon glyphicon-ok"></div>`);
+                            }
                             break;
                         }
-                    }
-
-                    $("#missionTime_" + item.missionId).text(missionTime.replace(" Uhr", ""));
-                    $("#countSw_" + item.missionId).text($this.find(".building_list_fms_5").length);
-
-                    if($this.find("#mission_bar_" + item.missionId).css("width") == "0%"){
-                        $("#countSw_" + item.missionId).append(` <div class="glyphicon glyphicon-ok"></div>`);
                     }
                 });
             }, key * 500);
