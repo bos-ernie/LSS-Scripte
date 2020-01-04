@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.5.0
+// @version      1.6.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://www.leitstellenspiel.de/*
@@ -19,10 +19,15 @@
                                  height: 650px;
                                  overflow-y: auto;
                              }
-                             .modal-lg {
-                                 width: 1024px !important;
+                             .modal-dialog{
+                                 position: relative;
+                                 display: table; /* This is important */
+                                 overflow-y: auto;
+                                 overflow-x: auto;
+                                 width: auto;
+                                 min-width: 300px;
                              }
-                      </style>`);
+                      </style><script></script>`);
     $("#btn-group-mission-select").before(`<a href="#"
                                               class="btn btn-xs btn-warning"
                                               id="showMissionRequests"
@@ -78,16 +83,14 @@
 
     function saCreateTable(arrSaMissions){
         $("#saTable").remove();
-        let strOutput = `<table id="saTable" class="table">
-                             <div class="row">
-                                 <tr>
-                                     <th class="col-4">Einsatzbezeichnung</th>
-                                     <th class="col-4">Einsatzadresse</th>
-                                     <th class="col-3" scope="row">Einsatzbeginn</th>
-                                     <th class="col">SW</th>
-                                     <th class="col"></th>
-                                 </tr>
-                             </div>`;
+        let strOutput = `<table id="saTable" class="table sortable">
+                             <tr>
+                                 <th class="col-4">Einsatzbezeichnung</th>
+                                 <th class="col-4">Einsatzadresse</th>
+                                 <th class="col-3">Einsatzbeginn</th>
+                                 <th class="col">SW</th>
+                                 <th class="col"></th>
+                             </tr>`;
         let statusVal = -1;
 
         for(let i = 0; i < arrSaMissions.length; i++){
@@ -100,23 +103,21 @@
                     break;
                 default: statusVal = "default";
             }
-            strOutput += `<div class="row">
-                              <tr class="alert alert-${statusVal}"a>
-                                  <td class="col-4">${arrSaMissions[i].missionName}</td>
-                                  <td class="col-4">${arrSaMissions[i].missionAdress}</td>
-                                  <td class="col-3" id="missionTime_${arrSaMissions[i].missionId}">
-                                      ${arrSaMissions[i].missionTime}
-                                  </td>
-                                  <td class="col" id="countSw_${arrSaMissions[i].missionId}">?</td>
-                                  <td class="pull-right col">
-                                      <a href="/missions/${arrSaMissions[i].missionId}"
-                                         class="btn btn-default btn-xs lightbox-open"
-                                         id="sa_alarm_button_${arrSaMissions[i].missionId}">
-                                          Anzeigen
-                                      </a>
-                                  </td>
-                              </tr>
-                          </div>`;
+            strOutput += `<tr class="alert alert-${statusVal}"a>
+                              <td class="col-4">${arrSaMissions[i].missionName}</td>
+                              <td class="col-4">${arrSaMissions[i].missionAdress}</td>
+                              <td class="col-3 text-nowrap" id="missionTime_${arrSaMissions[i].missionId}">
+                                  ${arrSaMissions[i].missionTime}
+                              </td>
+                              <td class="col text-nowrap" id="countSw_${arrSaMissions[i].missionId}">?</td>
+                              <td class="pull-right col">
+                                  <a href="/missions/${arrSaMissions[i].missionId}"
+                                     class="btn btn-default btn-xs lightbox-open"
+                                     id="sa_alarm_button_${arrSaMissions[i].missionId}">
+                                      Anzeigen
+                                  </a>
+                              </td>
+                          </tr>`;
         }
         strOutput += "</table>";
 
@@ -189,11 +190,18 @@
                             let hoursSinceStart = timeSinceStart.getHours();
                             let minsSinceStart = timeSinceStart.getMinutes();
 
+                            //$("#missionTime_" + item.missionId).html(`<span title="vor ${hoursSinceStart-1}h ${minsSinceStart}m">${missionTime.replace(" Uhr", "")}</span>`);
                             $("#missionTime_" + item.missionId).html(`<span title="vor ${hoursSinceStart-1}h ${minsSinceStart}m">${missionTime.replace(" Uhr", "")}</span>`);
 
                             $("#countSw_" + item.missionId).text($this.find(".building_list_fms_5").length);
 
-                            if($this.find("#mission_bar_" + item.missionId).css("width") == "0%"){
+                            let missionInProgress = $this.find("#mission_bar_" + item.missionId + " > div").hasClass("progress-striped-inner-active");
+                            let patientInProgress = false;
+                            $this.find(".mission_patient").each(function(){
+                                if($(this).find("[id^='mission_patients']").css("width") !== "0%") patientInProgress = true;
+                            });
+                            let missionWidth = $this.find("#mission_bar_" + item.missionId).css("width");
+                            if((missionWidth == "0%" && !patientInProgress) || (missionWidth == "100%" && !patientInProgress && !missionInProgress)){
                                 $("#countSw_" + item.missionId).append(` <div class="glyphicon glyphicon-ok"></div>`);
                             }
                             break;
