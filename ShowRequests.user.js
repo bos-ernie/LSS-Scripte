@@ -191,7 +191,6 @@
                     let missionTime = $this.find("#missionH1").attr("title").replace("Einsatz eingegangen: ", "");
                     let isoTime = "";
 
-                    console.log(missionTime);
                     for(let i = 0; i < monthsWord.length; i++){
                         if(missionTime.indexOf(monthsWord[i]) >= 0) {
                             missionTime = missionTime.replace(" " + monthsWord[i], monthsNumber[i] + "." + getYear);
