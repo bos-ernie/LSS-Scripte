@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.8.0
+// @version      1.9.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://www.leitstellenspiel.de/*
@@ -101,7 +101,7 @@
     function saCreateTable(arrSaMissions){
         $("#saTable").remove();
         let strOutput = `<table id="saTable" class="table">
-                             <tr>
+                             <tr id="saTableHead">
                                  <th class="col-4">Einsatzbezeichnung</th>
                                  <th class="col-4">Einsatzadresse</th>
                                  <th class="col-3">Einsatzbeginn</th>
@@ -177,12 +177,15 @@
             }
         });
 
-        $("#saBody").html(saCreateTable(speakRequest));
+        let createFilterButtons = `0 von ${speakRequest.length} Einsätzen geladen.`;
+
+        $("#saBody").html(`<div id="saFilters">${createFilterButtons}</div>${saCreateTable(speakRequest)}`);
 
         let monthsWord = ["Januar", "Februar", "März", "April", "Mai", "Juni", "Juli", "August", "September", "Oktober", "November", "Dezember"];
         let monthsNumber = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
         let getYear = new Date().getFullYear();
 
+        let loadElementsToGo = 0;
         $.each(speakRequest, function(key, item){
             setTimeout(function(){
                 requestMissionTime(item.missionId).done(function(result){
@@ -205,7 +208,11 @@
 
                             let actualDate = new Date();
                             let calcDifference = actualDate.getTime() - isoTime.getTime();
-                            let missionType = $this.find("#mission_help").attr("href").replace("/einsaetze/","").split("?");
+
+                            let missionType = [];
+                            if($this.find("#mission_help").length) missionType = $this.find("#mission_help").attr("href").replace("/einsaetze/","").split("?");
+                            else missionType[0] = -1;
+
                             let checkIsAllianceMission = isAllianceMission(missionType[0]);
 
                             if(checkIsAllianceMission) item.missionOrigin = "Coin";
@@ -252,6 +259,18 @@
                             break;
                         }
                     }
+
+                    loadElementsToGo++;
+                    $("#saFilters").text(`${loadElementsToGo} von ${speakRequest.length} Einsätzen geladen.`);
+
+                    if(speakRequest.length == loadElementsToGo) {
+                        $("#saFilters").html(`Filter: <div class="btn-group">
+                                                          <div class="btn btn-xs btn-success" id="saFilterNormal"><div class="glyphicon glyphicon-home"></div></div>
+                                                          <div class="btn btn-xs btn-success" id="saFilterCoin"><div class="glyphicon glyphicon-eur"></div></div>
+                                                          <div class="btn btn-xs btn-success" id="saFilterAmublance"><div class="glyphicon glyphicon-plus"></div></div>
+                                                          <div class="btn btn-xs btn-success" id="saFilterEvent"><div class="glyphicon glyphicon-star"></div></div>
+                                                      </div>`);
+                    }
                 });
             }, key * 500);
         });
@@ -289,6 +308,69 @@
             method: "GET"
         });
     }
+
+    let filterNormalActive = false;
+    let filterCoinActive = false;
+    let filterAmbulanceActive = false;
+    let filterEventActive = false;
+
+    function filterMissions(filterOption){
+        let activeFilter, resetFilter;
+        if(filterOption.endsWith("only")) resetFilter = true;
+
+        switch(filterOption){
+            case "home":
+                if(filterNormalActive) filterNormalActive = false;
+                else filterNormalActive = true;
+                activeFilter = filterNormalActive;
+                break;
+            case "eur":
+                if(filterCoinActive) filterCoinActive = false;
+                else filterCoinActive = true;
+                activeFilter = filterCoinActive;
+                break;
+            case "plus":
+                if(filterAmbulanceActive) filterAmbulanceActive = false;
+                else filterAmbulanceActive = true;
+                activeFilter = filterAmbulanceActive;
+                break;
+            case "star":
+                if(filterEventActive) filterEventActive = false;
+                else filterEventActive = true;
+                activeFilter = filterEventActive;
+                break;
+        }
+
+        $("#saTable >> tr").each(function(){
+            let rowHasClass = $(this).find("[id^='saMissionSign_']").hasClass("glyphicon-" + filterOption);
+
+            if(rowHasClass && $(this).attr("id") !== "saTableHead") {
+                if(activeFilter) $(this).css("display", "none");
+                else $(this).removeAttr("style");
+            }
+        });
+    }
+
+    //single click
+    $("body").on("click", "#saFilterNormal", function(){
+        filterMissions("home");
+        $("#saFilterNormal").toggleClass("btn-danger btn-success");
+    });
+
+    $("body").on("click", "#saFilterCoin", function(){
+        filterMissions("eur");
+        $("#saFilterCoin").toggleClass("btn-danger btn-success");
+    });
+
+    $("body").on("click", "#saFilterAmublance", function(){
+        filterMissions("plus");
+        $("#saFilterAmublance").toggleClass("btn-danger btn-success");
+    });
+
+    $("body").on("click", "#saFilterEvent", function(){
+        filterMissions("star");
+        $("#saFilterEvent").toggleClass("btn-danger btn-success");
+    });
 
     $("body").on("click", "#showMissionRequests", function(){
         saDoWork();
