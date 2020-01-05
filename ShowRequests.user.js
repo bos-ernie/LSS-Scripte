@@ -186,7 +186,8 @@
                             let calcDifference = actualDate.getTime() - isoTime.getTime();
                             let missionType = $this.find("#mission_help").attr("href").replace("/einsaetze/","").split("?");
 
-                            if(calcDifference >= 10800000 || (isAllianceMission(missionType[0]) && calcDifference >= 43200000)){
+
+                            if((calcDifference >= 10800000 && !isAllianceMission(missionType[0])) || (isAllianceMission(missionType[0]) && calcDifference >= 43200000)){
                                 $("#sa_alarm_button_" + item.missionId).toggleClass("btn-default btn-info");
                             };
 
