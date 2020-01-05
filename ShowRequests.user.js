@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.6.0
+// @version      1.7.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://www.leitstellenspiel.de/*
@@ -83,7 +83,7 @@
 
     function saCreateTable(arrSaMissions){
         $("#saTable").remove();
-        let strOutput = `<table id="saTable" class="table sortable">
+        let strOutput = `<table id="saTable" class="table">
                              <tr>
                                  <th class="col-4">Einsatzbezeichnung</th>
                                  <th class="col-4">Einsatzadresse</th>
@@ -103,7 +103,7 @@
                     break;
                 default: statusVal = "default";
             }
-            strOutput += `<tr class="alert alert-${statusVal}"a>
+            strOutput += `<tr class="alert alert-${statusVal}">
                               <td class="col-4">${arrSaMissions[i].missionName}</td>
                               <td class="col-4">${arrSaMissions[i].missionAdress}</td>
                               <td class="col-3 text-nowrap" id="missionTime_${arrSaMissions[i].missionId}">
@@ -117,7 +117,7 @@
                                       Anzeigen
                                   </a>
                               </td>
-                          </tr>`;
+</tr>`;
         }
         strOutput += "</table>";
 
@@ -126,33 +126,35 @@
 
     function saDoWork(){
         let speakRequest = [];
-        $("#mission_list_alliance > .missionSideBarEntry").each(function() {
+        $("#mission_list_alliance > .missionSideBarEntry, #mission_list_alliance_event > .missionSideBarEntry").each(function() {
             let $this = $(this);
-                if($this.hasClass("mission_deleted")) return true;
+            if($this.hasClass("mission_deleted")) return true;
 
-                let missionId = $this.attr("mission_id");
-                let requestPrisoners = $this.find("#mission_prisoners_" + missionId).text();
-                let requestPatients = $this.find("#mission_patients_" + missionId).text();
-                let requestText = $this.find("#mission_missing_short_" + missionId).text();
-                let missionAdress = $this.find("#mission_address_" + missionId).text();
-                let missionName = $("#mission_address_" + missionId).map(function(){
-                    return this.previousSibling.nodeValue.replace("[Verband] ", "").replace(", ", "");
-                });
+            let missionId = $this.attr("mission_id");
+            let requestPrisoners = $this.find("#mission_prisoners_" + missionId).text();
+            let requestPatients = $this.find("#mission_patients_" + missionId).text();
+            let requestText = $this.find("#mission_missing_short_" + missionId).text();
+            let missionAdress = $this.find("#mission_address_" + missionId).text();
+            let regexMissionName = new RegExp(/\[.*\](.*?),/gm);
+            let missionName = $(this).find("[id^=mission_caption_]").text().match(regexMissionName) == null ?
+                "unbekannt" : $(this).find("[id^=mission_caption_]").text().match(regexMissionName)[0].replace("[Verband] ", "").replace("[Event] ", "").replace(",", "");
 
-                let status = -1; // status 0 = nur Patienten, 1 = nur Gefangene, 2 = Gefangene und Patienten
+            missionAdress == "" ? "unbekannt" : missionAdress;
 
-                if(requestText.indexOf("Sprechwunsch") >= 0) {
-                    if(requestPatients && requestPrisoners) status = 2;
-                    else if(requestPatients) status = 0;
-                    else if(requestPrisoners) status = 1;
-                    else status = -1;
+            let status = -1; // status 0 = nur Patienten, 1 = nur Gefangene, 2 = Gefangene und Patienten
 
-                    speakRequest.push({"missionId": missionId,
-                                       "missionName": missionName[0],
-                                       "missionAdress": missionAdress,
-                                       "status": status,
-                                       "missionTime": "Lade..."});
-                }
+            if(requestText.indexOf("Sprechwunsch") >= 0) {
+                if(requestPatients && requestPrisoners) status = 2;
+                else if(requestPatients) status = 0;
+                else if(requestPrisoners) status = 1;
+                else status = -1;
+
+                speakRequest.push({"missionId": missionId,
+                                   "missionName": missionName,
+                                   "missionAdress": missionAdress,
+                                   "status": status,
+                                   "missionTime": "Lade..."});
+            }
         });
 
         $("#saBody").html(saCreateTable(speakRequest));
@@ -182,7 +184,9 @@
 
                             let actualDate = new Date();
                             let calcDifference = actualDate.getTime() - isoTime.getTime();
-                            if(calcDifference > 10800000){
+                            let missionType = $this.find("#mission_help").attr("href").replace("/einsaetze/","").split("?");
+
+                            if(calcDifference >= 10800000 || (isAllianceMission(missionType[0]) && calcDifference >= 43200000)){
                                 $("#sa_alarm_button_" + item.missionId).toggleClass("btn-default btn-info");
                             };
 
@@ -210,6 +214,18 @@
                 });
             }, key * 500);
         });
+    }
+
+    function isAllianceMission(missionType){
+        let allianceMissions = ["-1","41","43","59","75","99","207","221","222","256","350"];
+
+        for(let a = 0; a < allianceMissions.length; a++){
+            if(missionType == allianceMissions[a]) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     function requestMissionTime(missionId){
