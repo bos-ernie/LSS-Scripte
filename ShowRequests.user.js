@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.7.0
+// @version      1.8.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://www.leitstellenspiel.de/*
@@ -61,16 +61,33 @@
                             </div>
                             <div class="modal-body" id="saBody"></div>
                             <div class="modal-footer">
-                                <div class="pull-left">Legende:
+                                <div class="pull-left">
+                                    Legende:
                                     <span class="alert alert-warning" style="padding: 2px 5px; margin:0 5px;">Patienten</span>
                                     <span class="alert alert-success" style="padding: 2px 5px; margin:0 5px;">Gefangene</span>
                                     <span class="alert alert-danger" style="padding: 2px 5px; margin:0 5px;">beides</span>
+                                    <span class="alert alert-info" style="padding: 2px 5px; margin:0 5px;">Einsatz älter als 3 Stunden</span>
+                                </div><br/>
+                                <div class="pull-left" style="margin-top: 5px">
+                                    <span class="alert" style="padding: 2px 5px; margin:0 5px; background-color: #e5e8e8;">
+                                        <div class="glyphicon glyphicon-home"></div> normaler Einsatz
+                                    </span>
+                                    <span class="alert" style="padding: 2px 5px; margin:0 5px; background-color: #e5e8e8;">
+                                        <div class="glyphicon glyphicon-eur"></div> Coin-Einsatz
+                                    </span>
+                                    <span class="alert" style="padding: 2px 5px; margin:0 5px; background-color: #e5e8e8;">
+                                        <div class="glyphicon glyphicon-plus"></div> reiner RD-Einsatz
+                                    </span>
+                                    <span class="alert" style="padding: 2px 5px; margin:0 5px; background-color: #e5e8e8;">
+                                        <div class="glyphicon glyphicon-star"></div> Event-Einsatz
+                                    </span>
                                     <span class="alert" style="padding: 2px 5px; margin:0 5px; background-color: #e5e8e8;">
                                         <div class="glyphicon glyphicon-ok"></div> Einsatz erledigt
                                     </span>
-                                    <span class="alert alert-info" style="padding: 2px 5px; margin:0 5px;">Einsatz älter als 3 Stunden</span>
                                 </div>
+                                v${GM_info.script.version}
                                 <button type="button"
+                                        id="saCloseButton"
                                         class="btn btn-secondary"
                                         data-dismiss="modal"
                                 >
@@ -104,7 +121,7 @@
                 default: statusVal = "default";
             }
             strOutput += `<tr class="alert alert-${statusVal}">
-                              <td class="col-4">${arrSaMissions[i].missionName}</td>
+                              <td class="col-4"><div id="saMissionSign_${arrSaMissions[i].missionId}" class="glyphicon glyphicon-question-sign"></div> ${arrSaMissions[i].missionName}</td>
                               <td class="col-4">${arrSaMissions[i].missionAdress}</td>
                               <td class="col-3 text-nowrap" id="missionTime_${arrSaMissions[i].missionId}">
                                   ${arrSaMissions[i].missionTime}
@@ -134,12 +151,13 @@
             let requestPrisoners = $this.find("#mission_prisoners_" + missionId).text();
             let requestPatients = $this.find("#mission_patients_" + missionId).text();
             let requestText = $this.find("#mission_missing_short_" + missionId).text();
-            let missionAdress = $this.find("#mission_address_" + missionId).text();
+            let missionAdress = $this.find("#mission_address_" + missionId).text() == "" ? "unbekannt" : $this.find("#mission_address_" + missionId).text();
             let regexMissionName = new RegExp(/\[.*\](.*?),/gm);
-            let missionName = $(this).find("[id^=mission_caption_]").text().match(regexMissionName) == null ?
-                "unbekannt" : $(this).find("[id^=mission_caption_]").text().match(regexMissionName)[0].replace("[Verband] ", "").replace("[Event] ", "").replace(",", "");
+            let missionName = $this.find("#mission_caption_" + missionId).text().match(regexMissionName) == null ?
+                $this.find("#mission_caption_" + missionId).text() : $this.find("#mission_caption_" + missionId).text().match(regexMissionName)[0];
+            let missionOrigin = missionName.indexOf("Event") >= 0 ? "Event" : "Verband";
 
-            missionAdress == "" ? "unbekannt" : missionAdress;
+            missionName = missionName.replace("[Verband] ", "").replace("[Event] ", "").replace(",", "");
 
             let status = -1; // status 0 = nur Patienten, 1 = nur Gefangene, 2 = Gefangene und Patienten
 
@@ -153,7 +171,9 @@
                                    "missionName": missionName,
                                    "missionAdress": missionAdress,
                                    "status": status,
-                                   "missionTime": "Lade..."});
+                                   "missionTime": "Lade...",
+                                   "missionOrigin": missionOrigin
+                                  });
             }
         });
 
@@ -166,10 +186,12 @@
         $.each(speakRequest, function(key, item){
             setTimeout(function(){
                 requestMissionTime(item.missionId).done(function(result){
+                    let actMissionId = item.missionId;
                     let $this = $(result);
                     let missionTime = $this.find("#missionH1").attr("title").replace("Einsatz eingegangen: ", "");
                     let isoTime = "";
 
+                    console.log(missionTime);
                     for(let i = 0; i < monthsWord.length; i++){
                         if(missionTime.indexOf(monthsWord[i]) >= 0) {
                             missionTime = missionTime.replace(" " + monthsWord[i], monthsNumber[i] + "." + getYear);
@@ -185,36 +207,69 @@
                             let actualDate = new Date();
                             let calcDifference = actualDate.getTime() - isoTime.getTime();
                             let missionType = $this.find("#mission_help").attr("href").replace("/einsaetze/","").split("?");
+                            let checkIsAllianceMission = isAllianceMission(missionType[0]);
 
+                            if(checkIsAllianceMission) item.missionOrigin = "Coin";
 
-                            if((calcDifference >= 10800000 && !isAllianceMission(missionType[0])) || (isAllianceMission(missionType[0]) && calcDifference >= 43200000)){
-                                $("#sa_alarm_button_" + item.missionId).toggleClass("btn-default btn-info");
+                            if((calcDifference >= 10800000 && !checkIsAllianceMission) || (checkIsAllianceMission && calcDifference >= 43200000)){
+                                $("#sa_alarm_button_" + actMissionId).toggleClass("btn-default btn-info");
                             };
 
                             let timeSinceStart = new Date(calcDifference);
                             let hoursSinceStart = timeSinceStart.getHours();
                             let minsSinceStart = timeSinceStart.getMinutes();
 
+                            $("#missionTime_" + actMissionId).html(`${missionTime.replace(" Uhr", "")}<br/>vor ${hoursSinceStart-1}h ${minsSinceStart}m`);
                             //$("#missionTime_" + item.missionId).html(`<span title="vor ${hoursSinceStart-1}h ${minsSinceStart}m">${missionTime.replace(" Uhr", "")}</span>`);
-                            $("#missionTime_" + item.missionId).html(`<span title="vor ${hoursSinceStart-1}h ${minsSinceStart}m">${missionTime.replace(" Uhr", "")}</span>`);
 
                             $("#countSw_" + item.missionId).text($this.find(".building_list_fms_5").length);
 
-                            let missionInProgress = $this.find("#mission_bar_" + item.missionId + " > div").hasClass("progress-striped-inner-active");
+                            let missionInProgress = $this.find("#mission_bar_" + actMissionId + " > div").hasClass("progress-striped-inner-active");
                             let patientInProgress = false;
                             $this.find(".mission_patient").each(function(){
                                 if($(this).find("[id^='mission_patients']").css("width") !== "0%") patientInProgress = true;
                             });
-                            let missionWidth = $this.find("#mission_bar_" + item.missionId).css("width");
-                            if((missionWidth == "0%" && !patientInProgress) || (missionWidth == "100%" && !patientInProgress && !missionInProgress)){
+                            let missionWidth = $this.find("#mission_bar_" + actMissionId).css("width");
+
+                            let checkMissionAmbulanceOnly = isAmbulanceOnly(missionType[0]);
+                            if((missionWidth == "0%" && !patientInProgress) || checkMissionAmbulanceOnly){
                                 $("#countSw_" + item.missionId).append(` <div class="glyphicon glyphicon-ok"></div>`);
                             }
+
+                            if(checkMissionAmbulanceOnly) item.missionOrigin = "RD";
+
+                            let setMissionGlyhicon = "";
+                            switch(item.missionOrigin){
+                                case "Event": setMissionGlyhicon = "glyphicon-star";
+                                    break;
+                                case "Coin": setMissionGlyhicon = "glyphicon-eur";
+                                    break;
+                                case "RD": setMissionGlyhicon = "glyphicon-plus";
+                                    break;
+                                default: setMissionGlyhicon = "glyphicon-home";
+                            }
+
+                            $("#saMissionSign_" + actMissionId).toggleClass("glyphicon-question-sign " + setMissionGlyhicon);
                             break;
                         }
                     }
                 });
             }, key * 500);
         });
+    }
+
+    function isAmbulanceOnly(missionType){
+        let ambulanceMissions = ["44", "45", "46", "47", "48", "49", "50", "54", "56", "57", "58", "92", "108", "109", "110", "115", "147", "155", "156", "157", "164", "165", "179",
+                                 "180", "181", "182", "183", "184", "185", "210", "211", "212", "274", "281", "293", "297", "312", "326", "339", "340", "341", "354", "373", "374",
+                                 "377", "391", "397", "416", "417", "420", "425", "426", "427", "431", "440", "461", "466", "467", "468"];
+
+        for(let a = 0; a < ambulanceMissions.length; a++){
+            if(missionType == ambulanceMissions[a]) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     function isAllianceMission(missionType){
