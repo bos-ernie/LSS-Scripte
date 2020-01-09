@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.9.0
+// @version      1.9.1
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://www.leitstellenspiel.de/*
@@ -12,22 +12,25 @@
 (function() {
     'use strict';
 
-    $("head").append(`<style>.modal-dialog{
-                                 overflow-y: initial !important
+    $("head").append(`<style>
+                             .modal {
+                                 display: none;
+                                 position: fixed; /* Stay in place front is invalid - may break your css so removed */
+                                 padding-top: 100px;
+                                 left: 0;
+                                 right:0;
+                                 top: 0;
+                                 bottom: 0;
+                                 overflow: auto;
+                                 background-color: rgb(0,0,0);
+                                 background-color: rgba(0,0,0,0.4);
+                                 z-index: 9999;
                              }
                              .modal-body{
                                  height: 650px;
                                  overflow-y: auto;
                              }
-                             .modal-dialog{
-                                 position: relative;
-                                 display: table; /* This is important */
-                                 overflow-y: auto;
-                                 overflow-x: auto;
-                                 width: auto;
-                                 min-width: 300px;
-                             }
-                      </style><script></script>`);
+                      </style>`);
     $("#btn-group-mission-select").before(`<a href="#"
                                               class="btn btn-xs btn-warning"
                                               id="showMissionRequests"
@@ -37,8 +40,9 @@
                                                Sprechwünsche
                                            </a>`);
 
-    $("#btn-group-mission-select")
-        .after(`<div class="modal fade"
+    //$("#btn-group-mission-select")
+    $("body")
+        .prepend(`<div class="modal fade"
                      id="saShowMissions"
                      tabindex="-1"
                      role="dialog"
