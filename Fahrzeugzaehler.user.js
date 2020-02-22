@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fahrzeugzaehler
-// @version      2.1.0
+// @version      2.1.1
 // @author       Allure149
 // @description  Zaehlt die Fahrzeuge auf Anfahrt und vor Ort von jedem am Einsatz teilnehmenden Kameraden
 // @include      *://leitstellenspiel.de/missions/*
@@ -29,11 +29,11 @@ $(function() {
         textOwnCars = "Eigene Fahrzeuge";
         textCars = "Fahrzeuge";
         textPlayers = "Spieler";
-    } else if(I18n.locale == "en"){
+    } else if(I18n.locale == "en_US"){
         textOwnCars = "Own vehicles";
         textCars = "Vehicles";
         textPlayers = "Players";
-    } else if(I18n.locale == "fj"){
+    } else if(I18n.locale == "en_GB"){
         textOwnCars = "Own vehicles";
         textCars = "Vehicles";
         textPlayers = "Players";
