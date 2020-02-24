@@ -1,5 +1,6 @@
 // ==UserScript==
 // @name         ELW-Check
+// @description  Bei Klick zeigt es an wer einen ELW 1, ELW 2 oder AB-Einsatzleitung geschickt hat
 // @version      1.1.1
 // @author       Allure149 exklusiv fuer den Verband Bundesweiter KatSchutz (Bund)
 // @include      *://leitstellenspiel.de/missions/*
