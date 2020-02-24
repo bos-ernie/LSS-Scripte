@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ELW-Check
 // @description  Bei Klick zeigt es an wer einen ELW 1, ELW 2 oder AB-Einsatzleitung geschickt hat
-// @version      1.1.1
+// @version      1.1.2
 // @author       Allure149 exklusiv fuer den Verband Bundesweiter KatSchutz (Bund)
 // @include      *://leitstellenspiel.de/missions/*
 // @include      *://www.leitstellenspiel.de/missions/*
@@ -42,7 +42,7 @@
         });
 
         if(namesAgainstLaw.length > 0) return config.text.replace("%NAMES%", namesAgainstLaw.join(" "));
-        else $("#elw_check").toggleClass("alert-danger alert-success"); return "Keine Regelwidrigkeiten!";
+        else $("#elw_check").removeClass("alert-danger").addClass("alert-success"); return "Keine Regelwidrigkeiten!";
     }
 
     $("body").on("click", "#elw_check", function(){
