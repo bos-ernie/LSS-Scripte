@@ -42,7 +42,7 @@
                                            </div>
                                            <div class="input-group">
                                                <span class="input-group-addon" data-toggle="tooltip" data-placement="top" title="Welches Fahrzeug welche ID hat findest du heraus durch Klick auf das Fragezeichen." style="text-decoration: underline dotted" id="ecInputVehicleIdsHint">Fahrzeug-IDs
-                                                   <a href="https://github.com/LSS-Manager/lss-manager-v3/blob/master/lss-manager-v3/helperfunctions.js#L630" target="_blank">?</a>
+                                                   <a href="https://github.com/LSS-Manager/lss-manager-v3/blob/master/lss-manager-v3/helperfunctions.js#L631" target="_blank">?</a>
                                                </span>
                                                <input type="text" class="form-control" id="ecInputVehicleIds" value="${config.vehicleIds}">
                                            </div>
