@@ -73,7 +73,6 @@ $(function() {
         };
         outputText += `</table>`;
 
-        console.log("input after");
         $("#fzCars").after(outputText);
     }
 
