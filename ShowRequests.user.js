@@ -1,8 +1,9 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.9.1
+// @version      1.9.2
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
+// @include      *://leitstellenspiel.de/*
 // @include      *://www.leitstellenspiel.de/*
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/ShowRequests.user.js
 // @grant        none
