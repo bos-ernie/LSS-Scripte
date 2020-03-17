@@ -1,10 +1,9 @@
 // ==UserScript==
 // @name         ELW-Check
 // @description  Zeigt an wer einen ELW 1, ELW 2 oder AB-Einsatzleitung geschickt hat
-// @version      1.2.0
+// @version      2.0.1
 // @author       Allure149 exklusiv fuer den Verband Bundesweiter KatSchutz (Bund)
-// @include      *://leitstellenspiel.de/missions/*
-// @include      *://www.leitstellenspiel.de/missions/*
+// @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de)\/.*$/
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/ELWCheck.user.js
 // @grant        GM_addStyle
 // ==/UserScript==
@@ -19,7 +18,7 @@
 
     if (localStorage.getItem("ecSavedText") === null) {
         localStorage.ecSavedText = "Regelverstoß von %NAMES%";
-        localStorage.ecVehicleIds = JSON.stringify("3, 34, 78");
+        localStorage.ecVehicleIds = JSON.stringify(["3", "34", "78"]);
         localStorage.ecInTextfield = false;
     }
 
@@ -74,11 +73,12 @@
     function checkElws(){
         let namesAgainstLaw = [];
         let playerName = "";
+        let vehicleId = "";
 
         $("tr[id^=vehicle_row], .vehicle_driving_hidden").each(function(){
             playerName = "@" + getPlayerName($(this));
-
-            if(config.vehicleIds.indexOf(getVehicleTypeId($(this))) > -1 && !namesAgainstLaw.includes(playerName)) {
+            vehicleId = getVehicleTypeId($(this));
+            if(config.vehicleIds.indexOf(vehicleId) > -1 && !namesAgainstLaw.includes(playerName)) {
                 namesAgainstLaw.push(playerName);
             }
         });
@@ -103,7 +103,7 @@
 
     $("body").on("click", "#ecOptionsSave", function(){
         localStorage.ecSavedText = $("#ecInputText").val();
-        localStorage.ecVehicleIds = JSON.stringify($("#ecInputVehicleIds").val());
+        localStorage.ecVehicleIds = JSON.stringify($("#ecInputVehicleIds").val().replace(" ", "").split(","));
         localStorage.ecInTextfield = $("#ecInputTextfield").is(":checked");
         location.reload();
     });
