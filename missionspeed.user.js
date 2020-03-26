@@ -13,14 +13,15 @@
     'use strict';
 
     $('#search_input_field_missions').before(`<div id="missionSpeed" class="btn-group">
-			                                      <a id="mspa" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-pause"></div></a>
-                                                  <a id="msfb" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-fast-backward"></div></a>
-			                                      <a id="msb" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-backward"></div></a>
-			                                      <a id="mspl" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-play"></div></a>
-			                                      <a id="msf" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-forward"></div></a>
-			                                      <a id="msff" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-fast-forward"></div></a>
-			                                      <a id="msvf" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-plane"></div></a>
-			                                  </div>`);
+        <a id="mspa" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-pause"></div></a>
+        <a id="msfb" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-fast-backward"></div></a>
+        <a id="msb" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-backward"></div></a>
+        <a id="mspl" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-play"></div></a>
+        <a id="msf" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-forward"></div></a>
+        <a id="msff" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-fast-forward"></div></a>
+        <a id="msvf" class="btn btn-xs btn-success"><div class="glyphicon glyphicon-plane"></div></a>
+    </div>`);
+	
     function readPage(data){
         var speed = $('.alert-success', data).prev().attr('href').replace('/missionSpeed?speed=','');
 
