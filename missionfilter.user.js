@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MissionFilter
-// @version      1.0.0
+// @version      1.1.0
 // @author       Allure149
 // @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de|missionchief\.co\.uk|missionchief\.com|meldkamerspel\.com|centro-de-mando\.es|missionchief-australia\.com|larmcentralen-spelet\.se|operatorratunkowy\.pl|operatore112\.it|operateur112\.fr|dispetcher112\.ru|alarmcentral-spil\.dk|nodsentralspillet\.com|operacni-stredisko\.cz|112-merkez\.com|jogo-operador112\.com|operador193\.com|centro-de-mando\.mx|dyspetcher101-game\.com|missionchief-japan\.com)\/.*$/
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/missionfilter.user.js
@@ -20,8 +20,9 @@
     var checkCredits = parseInt(localStorage.mfCredits, 10);
 
     var getMissionRequirements = {};
-    $.getJSON('https://api.npoint.io/ec1be18ae19441c4e0b4').done(function(data){
+    $.getJSON('https://lssm.ledbrain.de/api/missions.php').done(function(data){
         getMissionRequirements = data;
+        console.log(data[0]);
         var showHide = "";
 
         initMissionFilter();
@@ -44,8 +45,13 @@
         var missionCredits = 0;
         var missionTypeId = parseInt(getMissionTypeId);
 
-        if(isNaN(missionTypeId)) missionCredits = 10000;
-        else missionCredits = getMissionRequirements[missionTypeId].credits;
+        console.log(missionTypeId);
+        if(isNaN(missionTypeId)){
+            missionCredits = 10000;
+        } else {
+            if(getMissionRequirements[missionTypeId] != undefined) missionCredits = getMissionRequirements[missionTypeId].credits;
+            else return false;
+        }
 
         if(missionCredits > checkCredits) returnValue = "show";
         else returnValue = "hide";
