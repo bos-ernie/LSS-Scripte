@@ -13,6 +13,12 @@
 
     GM_addStyle(`.mfhide{display:none}`);
 
+    if (localStorage.getItem("mfCredits") === null) {
+        localStorage.mfCredits = 8000;
+    }
+
+    var checkCredits = parseInt(localStorage.mfCredits, 10);
+
     var getMissionRequirements = {};
     $.getJSON('https://api.npoint.io/ec1be18ae19441c4e0b4').done(function(data){
         getMissionRequirements = data;
@@ -41,7 +47,7 @@
         if(isNaN(missionTypeId)) missionCredits = 10000;
         else missionCredits = getMissionRequirements[missionTypeId].credits;
 
-        if(missionCredits > 6000) returnValue = "show";
+        if(missionCredits > checkCredits) returnValue = "show";
         else returnValue = "hide";
 
         return returnValue;
@@ -57,4 +63,24 @@
             if(initShowHide == "hide") $this.addClass('mfhide');
         });
     }
+
+    if($('#alliance_li').length > 0){
+        $('#alliance_li .dropdown-menu').append(`<div class="col-sm-12">
+                                                     <div class="input-group">
+                                                         <span class="input-group-addon">Ab</span>
+                                                         <input type="textbox" maxlength="5" class="form-control" id="mfMinCredits" value=${checkCredits}>
+                                                         <span class="input-group-addon">Cr. Eins. ausbl.</span>
+                                                         <span class="input-group-addon" style="padding:0">
+                                                             <button type="button" class="btn btn-xs" id="mfSave">
+                                                                 <div class="glyphicon glyphicon-ok"></div>
+                                                             </button>
+                                                         </span>
+                                                     </div>
+                                                 </div>`);
+    }
+
+    $('#mfSave').on('click', function(){
+        localStorage.mfCredits = $('#mfMinCredits').val();
+        location.reload();
+    });
 })();
