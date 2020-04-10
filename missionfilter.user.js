@@ -45,7 +45,6 @@
         var missionCredits = 0;
         var missionTypeId = parseInt(getMissionTypeId);
 
-        console.log(missionTypeId);
         if(isNaN(missionTypeId)){
             missionCredits = 10000;
         } else {
