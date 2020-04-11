@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MissionFilter
-// @version      1.2.0
+// @version      1.2.1
 // @author       Allure149
 // @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de|missionchief\.co\.uk|missionchief\.com|meldkamerspel\.com|centro-de-mando\.es|missionchief-australia\.com|larmcentralen-spelet\.se|operatorratunkowy\.pl|operatore112\.it|operateur112\.fr|dispetcher112\.ru|alarmcentral-spil\.dk|nodsentralspillet\.com|operacni-stredisko\.cz|112-merkez\.com|jogo-operador112\.com|operador193\.com|centro-de-mando\.mx|dyspetcher101-game\.com|missionchief-japan\.com)\/.*$/
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/missionfilter.user.js
@@ -21,7 +21,6 @@
 
     var getMissionRequirements = {};
     $.getJSON('https://lssm.ledbrain.de/api/missions.php?lang='+I18n.locale).done(function(data){
-    //$.getJSON('https://lssm.ledbrain.de/api/missions.php?lang=de_DE').done(function(data){
         getMissionRequirements = data;
         var showHide = "";
 
@@ -31,6 +30,7 @@
         missionMarkerAdd = e => {
             missionMarkerOrig(e);
 
+            if(e.alliance_id == "undefined") return false;
             if(e.alliance_id != "null" && e.user_id != user_id){
                 showHide = processMissionFilter(e.mtid);
                 if(showHide == "hide") $('#mission_'+e.id).addClass('mfhide');
@@ -69,8 +69,7 @@
         });
     }
 
-    if(alliance_id != undefined){
-    //if($('#alliance_li').length > 0){
+    if(typeof alliance_id != "undefined"){
         $('#alliance_li .dropdown-menu').append(`<div class="col-sm-12">
                                                      <div class="input-group">
                                                          <span class="input-group-addon">Ab</span>
