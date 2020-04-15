@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.9.2
+// @version      1.10.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
@@ -380,4 +380,39 @@
     $("body").on("click", "#showMissionRequests", function(){
         saDoWork();
     });
+
+    if($('#mission_vehicle_at_mission').length > 0 && $('.building_list_fms_5').length > 0){
+        $('#h2_vehicle_driving').before(`<h4 id="h2_vehicles_with_speaks">Fahrzeuge mit Sprechwünschen</h4><table id="mission_vehicle_speaks" class="table table-striped tablesorter tablesorter-default" role="grid">
+                <thead>
+                <tr class="tablesorter-headerRow" role="row">
+                  <th style="width: 20px; user-select: none;" data-column="0" class="tablesorter-header sorter-false tablesorter-headerUnSorted" tabindex="0" scope="col" role="columnheader" aria-disabled="true" unselectable="on" aria-sort="none"><div class="tablesorter-header-inner"></div></th>
+                  <th data-column="1" class="tablesorter-header tablesorter-headerUnSorted" tabindex="0" scope="col" role="columnheader" aria-disabled="false" aria-controls="mission_vehicle_driving" unselectable="on" style="user-select: none;" aria-sort="none" aria-label="Fahrzeug: No sort applied, activate to apply an ascending sort"><div class="tablesorter-header-inner">Fahrzeug</div></th>
+                  <th class="hidden-xs tablesorter-header tablesorter-headerUnSorted" data-column="2" tabindex="0" scope="col" role="columnheader" aria-disabled="false" aria-controls="mission_vehicle_driving" unselectable="on" style="user-select: none;" aria-sort="none" aria-label="Wache: No sort applied, activate to apply an ascending sort"><div class="tablesorter-header-inner">Wache</div></th>
+
+                  <th data-column="3" class="tablesorter-header tablesorter-headerUnSorted" tabindex="0" scope="col" role="columnheader" aria-disabled="false" aria-controls="mission_vehicle_driving" unselectable="on" style="user-select: none;" aria-sort="none" aria-label="
+
+                  : No sort applied, activate to apply an ascending sort"><div class="tablesorter-header-inner">
+                  	<img src="/images/icons8-swipe_right.svg" title="Ankunft" style="height: 18px;width:18px;">
+                  </div></th>
+
+                  <th data-column="4" class="tablesorter-header tablesorter-headerUnSorted" tabindex="0" scope="col" role="columnheader" aria-disabled="false" aria-controls="mission_vehicle_driving" unselectable="on" style="user-select: none;" aria-sort="none" aria-label="
+
+
+                   : No sort applied, activate to apply an ascending sort"><div class="tablesorter-header-inner">
+
+
+                  <img src="/images/icons8-groups.svg" title="Besatzung" style="height: 18px;width:18px;"> </div></th>
+
+                  <th class="hidden-xs tablesorter-header tablesorter-headerUnSorted" data-column="5" tabindex="0" scope="col" role="columnheader" aria-disabled="false" aria-controls="mission_vehicle_driving" unselectable="on" style="user-select: none;" aria-sort="none" aria-label="Besitzer: No sort applied, activate to apply an ascending sort"><div class="tablesorter-header-inner">Besitzer</div></th>
+
+
+                  <th data-column="6" class="tablesorter-header sorter-false tablesorter-headerUnSorted" tabindex="0" scope="col" role="columnheader" aria-disabled="true" unselectable="on" style="user-select: none;" aria-sort="none"><div class="tablesorter-header-inner">
+
+
+                  </div></th>
+                </tr></thead><tbody aria-live="polite" aria-relevant="all"></tbody></table>`);
+        $.each($('.building_list_fms_5'), function(){
+            $('#mission_vehicle_speaks tbody').prepend($(this).parent().parent());
+        });
+    }
 })();
