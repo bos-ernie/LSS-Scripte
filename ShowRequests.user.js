@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.10.0
+// @version      1.11.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
@@ -12,6 +12,9 @@
 
 (function() {
     'use strict';
+
+    var userids = [150, 202, 675, 4436, 23646, 26154, 93509, 55549, 90138, 164205, 566291, 721319];
+    if($.inArray(user_id, userids) == -1) return false;
 
     $("head").append(`<style>
                              .modal {
@@ -71,7 +74,7 @@
                                     <span class="alert alert-warning" style="padding: 2px 5px; margin:0 5px;">Patienten</span>
                                     <span class="alert alert-success" style="padding: 2px 5px; margin:0 5px;">Gefangene</span>
                                     <span class="alert alert-danger" style="padding: 2px 5px; margin:0 5px;">beides</span>
-                                    <span class="alert alert-info" style="padding: 2px 5px; margin:0 5px;">Einsatz älter als 3 Stunden</span>
+                                    <span class="alert alert-info" style="padding: 2px 5px; margin:0 5px;">Einsatz älter als 3 bzw. 12 Stunden</span>
                                 </div><br/>
                                 <div class="pull-left" style="margin-top: 5px">
                                     <span class="alert" style="padding: 2px 5px; margin:0 5px; background-color: #e5e8e8;">
@@ -230,8 +233,8 @@
                             let hoursSinceStart = timeSinceStart.getHours();
                             let minsSinceStart = timeSinceStart.getMinutes();
 
-                            //$("#missionTime_" + actMissionId).html(`${missionTime.replace(" Uhr", "")}<br/>vor ${hoursSinceStart-1}h ${minsSinceStart}m`);
-                            $("#missionTime_" + item.missionId).html(`<span title="vor ${hoursSinceStart-1}h ${minsSinceStart}m">${missionTime.replace(" Uhr", "")}</span>`);
+                            $("#missionTime_" + actMissionId).html(`${missionTime.replace(" Uhr", "")}<br/>vor ${hoursSinceStart-1}h ${minsSinceStart}m`);
+                            //$("#missionTime_" + item.missionId).html(`<span title="vor ${hoursSinceStart-1}h ${minsSinceStart}m">${missionTime.replace(" Uhr", "")}</span>`);
 
                             $("#countSw_" + item.missionId).text($this.find(".building_list_fms_5").length);
 
