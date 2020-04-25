@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.11.1
+// @version      1.12.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
@@ -59,6 +59,7 @@
                                 <h5 class="modal-title" id="exampleModalLabel">
                                     Wo sind aktuell Sprechwünsche offen?
                                 </h5>
+                                <a class="btn btn-xs btn-default" id="saDoMissionRequests">Sprechwunschliste laden</a>
                                 <button type="button"
                                         class="close"
                                         data-dismiss="modal"
@@ -380,7 +381,7 @@
         $("#saFilterEvent").toggleClass("btn-danger btn-success");
     });
 
-    $("body").on("click", "#showMissionRequests", function(){
+    $("body").on("click", "#saDoMissionRequests", function(){
         saDoWork();
     });
 
