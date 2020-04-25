@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.11.0
+// @version      1.11.1
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
@@ -13,7 +13,7 @@
 (function() {
     'use strict';
 
-    var userids = [150, 202, 675, 4436, 23646, 26154, 93509, 55549, 90138, 164205, 566291, 721319];
+    var userids = [150, 202, 675, 4436, 23646, 26154, 93509, 55549, 90138, 164205, 545699, 566291, 721319];
     if($.inArray(user_id, userids) == -1) return false;
 
     $("head").append(`<style>
