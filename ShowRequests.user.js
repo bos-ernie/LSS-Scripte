@@ -5,7 +5,6 @@
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
 // @include      *://www.leitstellenspiel.de/*
-// @updateURL    https://github.com/types140/LSS-Scripte/raw/master/ShowRequests.user.js
 // @grant        none
 // ==/UserScript==
 /* global $ */
