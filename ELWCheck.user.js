@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         ELW-Check
 // @description  Zeigt an wer einen ELW 1, ELW 2 oder AB-Einsatzleitung geschickt hat
-// @version      2.0.1
+// @version      2.0.2
 // @author       Allure149 exklusiv fuer den Verband Bundesweiter KatSchutz (Bund)
 // @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de)\/.*$/
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/ELWCheck.user.js
@@ -17,7 +17,7 @@
                  .alert-small{ padding: 2px 5px; margin:0; }`);
 
     if (localStorage.getItem("ecSavedText") === null) {
-        localStorage.ecSavedText = "Regelverstoß von %NAMES%";
+        localStorage.ecSavedText = "%NAMES%, bitte Rückmeldung beachten.";
         localStorage.ecVehicleIds = JSON.stringify(["3", "34", "78"]);
         localStorage.ecInTextfield = false;
     }
