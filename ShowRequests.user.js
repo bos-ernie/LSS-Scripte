@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.12.0
+// @version      1.13.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
@@ -381,6 +381,10 @@
     });
 
     $("body").on("click", "#saDoMissionRequests", function(){
+        saDoWork();
+    });
+
+    $("body").on("click", "#showMissionRequests", function(){
         saDoWork();
     });
 
