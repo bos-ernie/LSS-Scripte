@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.13.0
+// @version      1.14.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
@@ -58,7 +58,9 @@
                                 <h5 class="modal-title" id="exampleModalLabel">
                                     Wo sind aktuell Sprechwünsche offen?
                                 </h5>
-                                <a class="btn btn-xs btn-default" id="saDoMissionRequests">Sprechwunschliste laden</a>
+                                <div class="btn-group">
+                                    <a class="btn btn-xs btn-default" id="saDoMissionRequests">Sprechwunschliste laden</a>
+                                </div>
                                 <button type="button"
                                         class="close"
                                         data-dismiss="modal"
@@ -75,6 +77,9 @@
                                     <span class="alert alert-success" style="padding: 2px 5px; margin:0 5px;">Gefangene</span>
                                     <span class="alert alert-danger" style="padding: 2px 5px; margin:0 5px;">beides</span>
                                     <span class="alert alert-info" style="padding: 2px 5px; margin:0 5px;">Einsatz älter als 3 bzw. 12 Stunden</span>
+                                    <span class="alert" style="padding: 2px 5px; margin:0 5px; background-color: #e5e8e8;">
+                                        <div class="glyphicon glyphicon-road"></div> Sprechwünsche bearbeiten
+                                    </span>
                                 </div><br/>
                                 <div class="pull-left" style="margin-top: 5px">
                                     <span class="alert" style="padding: 2px 5px; margin:0 5px; background-color: #e5e8e8;">
@@ -128,29 +133,39 @@
                     break;
                 default: statusVal = "default";
             }
-            strOutput += `<tr class="alert alert-${statusVal}">
-                              <td class="col-4"><div id="saMissionSign_${arrSaMissions[i].missionId}" class="glyphicon glyphicon-question-sign"></div> ${arrSaMissions[i].missionName}</td>
-                              <td class="col-4">${arrSaMissions[i].missionAdress}</td>
-                              <td class="col-3 text-nowrap" id="missionTime_${arrSaMissions[i].missionId}">
+            strOutput += `<tr class="alert alert-${statusVal}" id="saTr_${arrSaMissions[i].missionId}">
+                              <td class="col-xs-4"><div id="saMissionSign_${arrSaMissions[i].missionId}" class="glyphicon glyphicon-question-sign"></div> ${arrSaMissions[i].missionName}</td>
+                              <td class="col-xs-3">${arrSaMissions[i].missionAdress}</td>
+                              <td id="missionTime_${arrSaMissions[i].missionId}">
                                   ${arrSaMissions[i].missionTime}
                               </td>
-                              <td class="col text-nowrap" id="countSw_${arrSaMissions[i].missionId}">?</td>
-                              <td class="pull-right col">
-                                  <a href="/missions/${arrSaMissions[i].missionId}"
-                                     class="btn btn-default btn-xs lightbox-open"
-                                     id="sa_alarm_button_${arrSaMissions[i].missionId}">
-                                      Anzeigen
-                                  </a>
+                              <td id="countSw_${arrSaMissions[i].missionId}">?</td>
+                              <td class="col-xs-2">
+                                  <div class="btn-group">
+                                      <a href="/missions/${arrSaMissions[i].missionId}"
+                                         class="btn btn-default btn-xs lightbox-open"
+                                         id="sa_alarm_button_${arrSaMissions[i].missionId}">
+                                          Anzeigen
+                                      </a>
+                                      <a mission_id="${arrSaMissions[i].missionId}"
+                                         class="btn btn-default btn-xs saByePatient">
+                                          <div class="glyphicon glyphicon-road"></div>
+                                      </a>
+                                  </div>
                               </td>
-</tr>`;
+                          </tr>`;
         }
         strOutput += "</table>";
 
         return strOutput;
     }
 
+    let missionsDone = [];
+
     function saDoWork(){
         let speakRequest = [];
+        missionsDone = [];
+
         $("#mission_list_alliance > .missionSideBarEntry, #mission_list_alliance_event > .missionSideBarEntry").each(function() {
             let $this = $(this);
             if($this.hasClass("mission_deleted")) return true;
@@ -185,6 +200,8 @@
             }
         });
 
+        if($('#saWorkMissionRequests').length > 0) $('#saWorkMissionRequests').remove();
+
         let createFilterButtons = `0 von ${speakRequest.length} Einsätzen geladen.`;
 
         $("#saBody").html(`<div id="saFilters">${createFilterButtons}</div>${saCreateTable(speakRequest)}`);
@@ -194,6 +211,7 @@
         let getYear = new Date().getFullYear();
 
         let loadElementsToGo = 0;
+
         $.each(speakRequest, function(key, item){
             setTimeout(function(){
                 requestMissionTime(item.missionId).done(function(result){
@@ -201,6 +219,7 @@
                     let $this = $(result);
                     let missionTime = $this.find("#missionH1").attr("title").replace("Einsatz eingegangen: ", "");
                     let isoTime = "";
+                    let missionTimeDone = false;
 
                     for(let i = 0; i < monthsWord.length; i++){
                         if(missionTime.indexOf(monthsWord[i]) >= 0) {
@@ -227,6 +246,7 @@
 
                             if((calcDifference >= 10800000 && !checkIsAllianceMission) || (checkIsAllianceMission && calcDifference >= 43200000)){
                                 $("#sa_alarm_button_" + actMissionId).toggleClass("btn-default btn-info");
+                                missionTimeDone = true;
                             };
 
                             let timeSinceStart = new Date(calcDifference);
@@ -246,11 +266,14 @@
                             let missionWidth = $this.find("#mission_bar_" + actMissionId).css("width");
 
                             let checkMissionAmbulanceOnly = isAmbulanceOnly(missionType[0]);
+
+                            if(checkMissionAmbulanceOnly) item.missionOrigin = "RD";
+
+                            if(missionTimeDone && (item.status == "0" || item.status == "2") || item.missionOrigin == "RD") missionsDone.push(actMissionId);
+
                             if((missionWidth == "0%" && !patientInProgress) || checkMissionAmbulanceOnly){
                                 $("#countSw_" + item.missionId).append(` <div class="glyphicon glyphicon-ok"></div>`);
                             }
-
-                            if(checkMissionAmbulanceOnly) item.missionOrigin = "RD";
 
                             let setMissionGlyhicon = "";
                             switch(item.missionOrigin){
@@ -278,6 +301,8 @@
                                                           <div class="btn btn-xs btn-success" id="saFilterAmublance"><div class="glyphicon glyphicon-plus"></div></div>
                                                           <div class="btn btn-xs btn-success" id="saFilterEvent"><div class="glyphicon glyphicon-star"></div></div>
                                                       </div>`);
+                        if($('#saWorkMissionRequests').length == 0) $('#saDoMissionRequests').after(`<a class="btn btn-xs btn-danger" id="saWorkMissionRequests">Sprechwünsche bearbeiten</a>`)
+
                     }
                 });
             }, key * 500);
@@ -388,38 +413,40 @@
         saDoWork();
     });
 
-    if($('#mission_vehicle_at_mission').length > 0 && $('.building_list_fms_5').length > 0){
-        $('#h2_vehicle_driving').before(`<h4 id="h2_vehicles_with_speaks">Fahrzeuge mit Sprechwünschen</h4><table id="mission_vehicle_speaks" class="table table-striped tablesorter tablesorter-default" role="grid">
-                <thead>
-                <tr class="tablesorter-headerRow" role="row">
-                  <th style="width: 20px; user-select: none;" data-column="0" class="tablesorter-header sorter-false tablesorter-headerUnSorted" tabindex="0" scope="col" role="columnheader" aria-disabled="true" unselectable="on" aria-sort="none"><div class="tablesorter-header-inner"></div></th>
-                  <th data-column="1" class="tablesorter-header tablesorter-headerUnSorted" tabindex="0" scope="col" role="columnheader" aria-disabled="false" aria-controls="mission_vehicle_driving" unselectable="on" style="user-select: none;" aria-sort="none" aria-label="Fahrzeug: No sort applied, activate to apply an ascending sort"><div class="tablesorter-header-inner">Fahrzeug</div></th>
-                  <th class="hidden-xs tablesorter-header tablesorter-headerUnSorted" data-column="2" tabindex="0" scope="col" role="columnheader" aria-disabled="false" aria-controls="mission_vehicle_driving" unselectable="on" style="user-select: none;" aria-sort="none" aria-label="Wache: No sort applied, activate to apply an ascending sort"><div class="tablesorter-header-inner">Wache</div></th>
+    $('body').on('click', '.saByePatient', function(){
+        var missionId = $(this).attr('mission_id');
 
-                  <th data-column="3" class="tablesorter-header tablesorter-headerUnSorted" tabindex="0" scope="col" role="columnheader" aria-disabled="false" aria-controls="mission_vehicle_driving" unselectable="on" style="user-select: none;" aria-sort="none" aria-label="
+        $.get('/missions/'+missionId).done(function(res){
+            var $response = $(res);
 
-                  : No sort applied, activate to apply an ascending sort"><div class="tablesorter-header-inner">
-                  	<img src="/images/icons8-swipe_right.svg" title="Ankunft" style="height: 18px;width:18px;">
-                  </div></th>
+            $('.building_list_fms_5', $response).each(function(){
+                var $this = $(this).parent().parent();
+                var vehicleId = $('td:nth-child(2) a', $this).attr('href').replace('/vehicles/','');
 
-                  <th data-column="4" class="tablesorter-header tablesorter-headerUnSorted" tabindex="0" scope="col" role="columnheader" aria-disabled="false" aria-controls="mission_vehicle_driving" unselectable="on" style="user-select: none;" aria-sort="none" aria-label="
+                $.get('/vehicles/'+vehicleId+'/patient/-1');
+            });
 
-
-                   : No sort applied, activate to apply an ascending sort"><div class="tablesorter-header-inner">
-
-
-                  <img src="/images/icons8-groups.svg" title="Besatzung" style="height: 18px;width:18px;"> </div></th>
-
-                  <th class="hidden-xs tablesorter-header tablesorter-headerUnSorted" data-column="5" tabindex="0" scope="col" role="columnheader" aria-disabled="false" aria-controls="mission_vehicle_driving" unselectable="on" style="user-select: none;" aria-sort="none" aria-label="Besitzer: No sort applied, activate to apply an ascending sort"><div class="tablesorter-header-inner">Besitzer</div></th>
-
-
-                  <th data-column="6" class="tablesorter-header sorter-false tablesorter-headerUnSorted" tabindex="0" scope="col" role="columnheader" aria-disabled="true" unselectable="on" style="user-select: none;" aria-sort="none"><div class="tablesorter-header-inner">
-
-
-                  </div></th>
-                </tr></thead><tbody aria-live="polite" aria-relevant="all"></tbody></table>`);
-        $.each($('.building_list_fms_5'), function(){
-            $('#mission_vehicle_speaks tbody').prepend($(this).parent().parent());
+            $('#saTr_'+missionId).remove();
         });
-    }
+    });
+
+    var getMissionVehicles = (url, callback) => $.get(url, callback);
+
+    $('body').on('click', '#saWorkMissionRequests', async function(){
+        for(let i = 0; i < missionsDone.length; i++){
+            var missionId = missionsDone[i];
+
+            var res = await getMissionVehicles('/missions/'+missionId);
+            var $response = $(res);
+
+            $('.building_list_fms_5', $response).each(function(){
+                var $this = $(this).parent().parent();
+                var vehicleId = $('td:nth-child(2) a', $this).attr('href').replace('/vehicles/','');
+
+                $.get('/vehicles/'+vehicleId+'/patient/-1');
+            });
+
+            $('#saTr_'+missionId).remove();
+        }
+    });
 })();
