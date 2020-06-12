@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.15.0
+// @version      2.0.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
@@ -9,13 +9,19 @@
 // ==/UserScript==
 /* global $ */
 
-(function() {
+(async function() {
     'use strict';
 
     var disablePrisoners = true;
 
     var userids = [150, 202, 675, 4436, 23646, 26154, 93509, 55549, 90138, 164205, 545699, 566291, 721319];
     if($.inArray(user_id, userids) == -1) return false;
+
+    if (!window.sessionStorage.hasOwnProperty('aMissions') || JSON.parse(window.sessionStorage.aMissions).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)){
+        await $.getJSON('/einsaetze.json').done(function(data){
+            localStorage.aMissions = JSON.stringify({lastUpdate: new Date().getTime(), value: data});
+        });
+    }
 
     $("head").append(`<style>
                              .modal {
@@ -258,12 +264,12 @@
                                 missionTimeDone = true;
                             };
 
-                            let timeSinceStart = new Date(calcDifference);
-                            let hoursSinceStart = timeSinceStart.getHours();
-                            let minsSinceStart = timeSinceStart.getMinutes();
+                            let timeSinceStart = calcDifference / 1000;
+                            let hoursSinceStart = Math.floor(timeSinceStart / 3600);
+                            let minsSinceStart = Math.floor(timeSinceStart / 60) - (hoursSinceStart * 60);
 
-                            $("#missionTime_" + actMissionId).html(`${missionTime.replace(" Uhr", "")}<br/>vor ${hoursSinceStart-1}h ${minsSinceStart}m`);
-                            //$("#missionTime_" + item.missionId).html(`<span title="vor ${hoursSinceStart-1}h ${minsSinceStart}m">${missionTime.replace(" Uhr", "")}</span>`);
+                            //$("#missionTime_" + actMissionId).html(`${missionTime.replace(" Uhr", "")}<br/>vor ${(hoursSinceStart < 10 ? "0" + hoursSinceStart : hoursSinceStart)}h ${(minsSinceStart < 10 ? "0" + minsSinceStart : minsSinceStart)}m`);
+                            $("#missionTime_" + item.missionId).html(`<span title="vor ${(hoursSinceStart < 10 ? "0" + hoursSinceStart : hoursSinceStart)}h ${(minsSinceStart < 10 ? "0" + minsSinceStart : minsSinceStart)}m">${missionTime.replace(" Uhr", "")}</span>`);
 
                             $("#countSw_" + item.missionId).text($this.find(".building_list_fms_5").length);
 
@@ -319,29 +325,11 @@
     }
 
     function isAmbulanceOnly(missionType){
-        let ambulanceMissions = ["44", "45", "46", "47", "48", "49", "50", "54", "56", "57", "58", "92", "108", "109", "110", "115", "147", "155", "156", "157", "164", "165", "179",
-                                 "180", "181", "182", "183", "184", "185", "210", "211", "212", "274", "281", "293", "297", "312", "326", "339", "340", "341", "354", "373", "374",
-                                 "377", "391", "397", "416", "417", "420", "425", "426", "427", "431", "440", "461", "466", "467", "468"];
-
-        for(let a = 0; a < ambulanceMissions.length; a++){
-            if(missionType == ambulanceMissions[a]) {
-                return true;
-            }
-        }
-
-        return false;
+        return JSON.parse(localStorage.aMissions).value.filter(e => e.id == missionType)[0].average_credits == null ? true : false;
     }
 
     function isAllianceMission(missionType){
-        let allianceMissions = ["-1","41","43","59","75","99","207","221","222","256","350"];
-
-        for(let a = 0; a < allianceMissions.length; a++){
-            if(missionType == allianceMissions[a]) {
-                return true;
-            }
-        }
-
-        return false;
+        return JSON.parse(localStorage.aMissions).value.filter(e => e.id == missionType)[0].additional.only_alliance_mission == true ? true : false;
     }
 
     function requestMissionTime(missionId){
