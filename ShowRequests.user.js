@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      1.14.0
+// @version      1.15.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
@@ -11,6 +11,8 @@
 
 (function() {
     'use strict';
+
+    var disablePrisoners = true;
 
     var userids = [150, 202, 675, 4436, 23646, 26154, 93509, 55549, 90138, 164205, 545699, 566291, 721319];
     if($.inArray(user_id, userids) == -1) return false;
@@ -133,6 +135,7 @@
                     break;
                 default: statusVal = "default";
             }
+
             strOutput += `<tr class="alert alert-${statusVal}" id="saTr_${arrSaMissions[i].missionId}">
                               <td class="col-xs-4"><div id="saMissionSign_${arrSaMissions[i].missionId}" class="glyphicon glyphicon-question-sign"></div> ${arrSaMissions[i].missionName}</td>
                               <td class="col-xs-3">${arrSaMissions[i].missionAdress}</td>
@@ -185,10 +188,16 @@
             let status = -1; // status 0 = nur Patienten, 1 = nur Gefangene, 2 = Gefangene und Patienten
 
             if(requestText.indexOf("Sprechwunsch") >= 0) {
-                if(requestPatients && requestPrisoners) status = 2;
-                else if(requestPatients) status = 0;
-                else if(requestPrisoners) status = 1;
-                else status = -1;
+                if(requestPatients && requestPrisoners) {
+                    status = 2;
+                } else if(requestPatients) {
+                    status = 0;
+                } else if(requestPrisoners) {
+                    if(disablePrisoners) return true;
+                    status = 1;
+                } else {
+                    status = -1;
+                }
 
                 speakRequest.push({"missionId": missionId,
                                    "missionName": missionName,
@@ -253,8 +262,8 @@
                             let hoursSinceStart = timeSinceStart.getHours();
                             let minsSinceStart = timeSinceStart.getMinutes();
 
-                            //$("#missionTime_" + actMissionId).html(`${missionTime.replace(" Uhr", "")}<br/>vor ${hoursSinceStart-1}h ${minsSinceStart}m`);
-                            $("#missionTime_" + item.missionId).html(`<span title="vor ${hoursSinceStart-1}h ${minsSinceStart}m">${missionTime.replace(" Uhr", "")}</span>`);
+                            $("#missionTime_" + actMissionId).html(`${missionTime.replace(" Uhr", "")}<br/>vor ${hoursSinceStart-1}h ${minsSinceStart}m`);
+                            //$("#missionTime_" + item.missionId).html(`<span title="vor ${hoursSinceStart-1}h ${minsSinceStart}m">${missionTime.replace(" Uhr", "")}</span>`);
 
                             $("#countSw_" + item.missionId).text($this.find(".building_list_fms_5").length);
 
@@ -423,10 +432,10 @@
                 var $this = $(this).parent().parent();
                 var vehicleId = $('td:nth-child(2) a', $this).attr('href').replace('/vehicles/','');
 
-                $.get('/vehicles/'+vehicleId+'/patient/-1');
+                $.get('/vehicles/'+vehicleId+'/patient/-1').done(function(){
+                    $('#saTr_'+missionId).remove();
+                });
             });
-
-            $('#saTr_'+missionId).remove();
         });
     });
 
