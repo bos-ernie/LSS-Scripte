@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      2.0.0
+// @version      2.1.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
@@ -48,7 +48,7 @@
                                               data-toggle="modal"
                                               data-target="#saShowMissions"
                                            >
-                                               Sprechwünsche
+                                               <div class="glyphicon glyphicon-bullhorn"></div>
                                            </a>`);
 
     //$("#btn-group-mission-select")
@@ -268,8 +268,8 @@
                             let hoursSinceStart = Math.floor(timeSinceStart / 3600);
                             let minsSinceStart = Math.floor(timeSinceStart / 60) - (hoursSinceStart * 60);
 
-                            //$("#missionTime_" + actMissionId).html(`${missionTime.replace(" Uhr", "")}<br/>vor ${(hoursSinceStart < 10 ? "0" + hoursSinceStart : hoursSinceStart)}h ${(minsSinceStart < 10 ? "0" + minsSinceStart : minsSinceStart)}m`);
-                            $("#missionTime_" + item.missionId).html(`<span title="vor ${(hoursSinceStart < 10 ? "0" + hoursSinceStart : hoursSinceStart)}h ${(minsSinceStart < 10 ? "0" + minsSinceStart : minsSinceStart)}m">${missionTime.replace(" Uhr", "")}</span>`);
+                            $("#missionTime_" + actMissionId).html(`${missionTime.replace(" Uhr", "")}<br/>vor ${(hoursSinceStart < 10 ? "0" + hoursSinceStart : hoursSinceStart)}h ${(minsSinceStart < 10 ? "0" + minsSinceStart : minsSinceStart)}m`);
+                            //$("#missionTime_" + item.missionId).html(`<span title="vor ${(hoursSinceStart < 10 ? "0" + hoursSinceStart : hoursSinceStart)}h ${(minsSinceStart < 10 ? "0" + minsSinceStart : minsSinceStart)}m">${missionTime.replace(" Uhr", "")}</span>`);
 
                             $("#countSw_" + item.missionId).text($this.find(".building_list_fms_5").length);
 
@@ -309,6 +309,8 @@
                     loadElementsToGo++;
                     $("#saFilters").text(`${loadElementsToGo} von ${speakRequest.length} Einsätzen geladen.`);
 
+                    if($('#saWorkMissionRequests').length == 0) $('#saDoMissionRequests').after(`<a class="btn btn-xs btn-danger" id="saWorkMissionRequests">Sprechwünsche bearbeiten</a>`);
+
                     if(speakRequest.length == loadElementsToGo) {
                         $("#saFilters").html(`Filter: <div class="btn-group">
                                                           <div class="btn btn-xs btn-success" id="saFilterNormal"><div class="glyphicon glyphicon-home"></div></div>
@@ -316,8 +318,6 @@
                                                           <div class="btn btn-xs btn-success" id="saFilterAmublance"><div class="glyphicon glyphicon-plus"></div></div>
                                                           <div class="btn btn-xs btn-success" id="saFilterEvent"><div class="glyphicon glyphicon-star"></div></div>
                                                       </div>`);
-                        if($('#saWorkMissionRequests').length == 0) $('#saDoMissionRequests').after(`<a class="btn btn-xs btn-danger" id="saWorkMissionRequests">Sprechwünsche bearbeiten</a>`)
-
                     }
                 });
             }, key * 500);
@@ -325,11 +325,13 @@
     }
 
     function isAmbulanceOnly(missionType){
-        return JSON.parse(localStorage.aMissions).value.filter(e => e.id == missionType)[0].average_credits == null ? true : false;
+        var missionRequirements = JSON.parse(localStorage.aMissions).value.filter(e => e.id == missionType)[0];
+        return missionRequirements === undefined ? false : (missionRequirements.average_credits == null) ? true : false;
     }
 
     function isAllianceMission(missionType){
-        return JSON.parse(localStorage.aMissions).value.filter(e => e.id == missionType)[0].additional.only_alliance_mission == true ? true : false;
+        var missionRequirements = JSON.parse(localStorage.aMissions).value.filter(e => e.id == missionType)[0];
+        return missionRequirements === undefined ? false : (missionRequirements.additional.only_alliance_mission) ? true : false;
     }
 
     function requestMissionTime(missionId){
