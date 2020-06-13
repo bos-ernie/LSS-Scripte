@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      2.1.0
+// @version      2.1.1
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
@@ -331,7 +331,7 @@
 
     function isAllianceMission(missionType){
         var missionRequirements = JSON.parse(localStorage.aMissions).value.filter(e => e.id == missionType)[0];
-        return missionRequirements === undefined ? false : (missionRequirements.additional.only_alliance_mission) ? true : false;
+        return missionRequirements === undefined ? true : (missionRequirements.additional.only_alliance_mission) ? true : false;
     }
 
     function requestMissionTime(missionId){
