@@ -8,4 +8,4 @@
 // @grant        none
 // ==/UserScript==
 
-(function(){"use strict";var m=document.querySelector(".alliance-buildings-filter").parentNode.parentNode,c=m.childNodes[0],st=(s)=>{alliance_building_show=s.checked;console.log(alliance_building_show)};st(c);m.addEventListener("click", ()=>st(c));})();
+(function() {"use strict";var m=document.querySelector(".alliance-buildings-filter").parentNode.parentNode,c=m.childNodes[0],st=(s)=>{alliance_building_show=s.checked};st(c);m.addEventListener("click", ()=>st(c));})();
