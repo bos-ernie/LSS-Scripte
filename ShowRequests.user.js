@@ -1,21 +1,27 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      2.1.1
+// @version      2.2.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
 // @include      *://www.leitstellenspiel.de/*
 // @grant        none
 // ==/UserScript==
-/* global $ */
+/* global $,user_id */
 
 (async function() {
     'use strict';
 
     var disablePrisoners = true;
 
-    var userids = [150, 202, 675, 4436, 23646, 26154, 93509, 55549, 90138, 164205, 545699, 566291, 721319];
-    if($.inArray(user_id, userids) == -1) return false;
+    if(!localStorage.aAlliance || JSON.parse(localStorage.aAlliance).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
+        await $.getJSON("/api/allianceinfo").done(function(data) {
+            localStorage.setItem('aAlliance', JSON.stringify({lastUpdate: new Date().getTime(), value: data}));
+        });
+    }
+    var aAlliance = JSON.parse(localStorage.aAlliance).value;
+    var icke = aAlliance.users.filter((e)=>e.id==user_id)[0];
+    if(!icke.roles.includes("Sprechwunsch-Admin","Verbands-Co-Admin","Verbands-Admin")) return false;
 
     if (!window.sessionStorage.hasOwnProperty('aMissions') || JSON.parse(window.sessionStorage.aMissions).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)){
         await $.getJSON('/einsaetze.json').done(function(data){
@@ -256,10 +262,12 @@
                             else missionType[0] = -1;
 
                             let checkIsAllianceMission = isAllianceMission(missionType[0]);
-
                             if(checkIsAllianceMission) item.missionOrigin = "Coin";
 
-                            if((calcDifference >= 10800000 && !checkIsAllianceMission) || (checkIsAllianceMission && calcDifference >= 43200000)){
+                            let checkMissionAmbulanceOnly = isAmbulanceOnly(missionType[0]);
+                            if(checkMissionAmbulanceOnly) item.missionOrigin = "RD";
+
+                            if((calcDifference >= 10800000 && !checkIsAllianceMission) || (checkIsAllianceMission && calcDifference >= 43200000) || checkMissionAmbulanceOnly){
                                 $("#sa_alarm_button_" + actMissionId).toggleClass("btn-default btn-info");
                                 missionTimeDone = true;
                             };
@@ -279,10 +287,6 @@
                                 if($(this).find("[id^='mission_patients']").css("width") !== "0%") patientInProgress = true;
                             });
                             let missionWidth = $this.find("#mission_bar_" + actMissionId).css("width");
-
-                            let checkMissionAmbulanceOnly = isAmbulanceOnly(missionType[0]);
-
-                            if(checkMissionAmbulanceOnly) item.missionOrigin = "RD";
 
                             if(missionTimeDone && (item.status == "0" || item.status == "2") || item.missionOrigin == "RD") missionsDone.push(actMissionId);
 
