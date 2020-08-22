@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      2.2.0
+// @version      2.2.1
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
@@ -21,7 +21,9 @@
     }
     var aAlliance = JSON.parse(localStorage.aAlliance).value;
     var icke = aAlliance.users.filter((e)=>e.id==user_id)[0];
-    if(!icke.roles.includes("Sprechwunsch-Admin","Verbands-Co-Admin","Verbands-Admin")) return false;
+    var rolesToCheck = ["Sprechwunsch-Admin","Verbands-Co-Admin","Verbands-Admin"];
+    if(!icke.roles.some((e)=>rolesToCheck.includes(e))) return false;
+    //if(!icke.roles.includes("Sprechwunsch-Admin","Verbands-Co-Admin","Verbands-Admin")) return false;
 
     if (!window.sessionStorage.hasOwnProperty('aMissions') || JSON.parse(window.sessionStorage.aMissions).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)){
         await $.getJSON('/einsaetze.json').done(function(data){
