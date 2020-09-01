@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Verbandslehrgaenge filtern
-// @version      1.1.0
+// @version      1.1.1
 // @author       Allure149
 // @include      *://www.leitstellenspiel.de/schoolings
 // @include      *://leitstellenspiel.de/schoolings
@@ -59,19 +59,21 @@
                 $this.removeClass('clicked');
 
                 for(var education of educations){
-                    if(education.hiorg != hiorg.name) {
-                        $("#education_schooling_"+education.id).parent().removeClass("filterShow").addClass("filterHide");
-                        filterLabels[hiorg.sorter].show = false;
-                    } else {
-                        $("#education_schooling_"+education.id).parent().removeClass("filterHide").addClass("filterShow");
-                        filterLabels[hiorg.sorter].show = true;
-                    }
+                    if(education.hiorg != hiorg.name) $("#education_schooling_"+education.id).parent().removeClass("filterShow").addClass("filterHide");
+                    else $("#education_schooling_"+education.id).parent().removeClass("filterHide").addClass("filterShow");
                 }
+
+                filterLabels[hiorg.sorter].show = !filterLabels[hiorg.sorter].show;
 
                 for(var filterLabel of filterLabels){
                     $("#filter"+filterLabel.short).removeClass("btn-danger btn-success");
-                    if(filterLabel.name != hiorg.name) $("#filter"+filterLabel.short).addClass("btn-danger");
-                    else $("#filter"+filterLabel.short).addClass("btn-success");
+                    if(filterLabel.name != hiorg.name){
+                        $("#filter"+filterLabel.short).addClass("btn-danger");
+                        filterLabels[filterLabel.sorter].show = false;
+                    } else {
+                        $("#filter"+filterLabel.short).addClass("btn-success");
+                        filterLabels[filterLabel.sorter].show = true;
+                    }
                 }
             } else {
                 $this.addClass('clicked');
