@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Verbandslehrgaenge filtern
-// @version      1.0.1
+// @version      1.1.0
 // @author       Allure149
 // @include      *://www.leitstellenspiel.de/schoolings
 // @include      *://leitstellenspiel.de/schoolings
@@ -23,7 +23,7 @@
         var educationId = e.attr("href").replace("/schoolings/","");
         educations.push({"hiorg":educationHiorg,"name":educationName,"id":educationId,"show":true,"sorter":i});
     });
-    educations.sort((a, b) => a.name.toUpperCase() > b.name.toUpperCase());
+    educations.sort((a, b) => a.name.toUpperCase() < b.name.toUpperCase());
 
     $(".search_input_field").before(`<div id="allianceEducationFilter" class="btn-group"></div>`);
 
@@ -37,14 +37,22 @@
     }
     $("#allianceEducationFilter").append(`<select id="filterSelect" class="select optional form-control input-sm"><option>Lehrgang wählen</option></input>`);
 
+    $("#filterSelect").append(`<option id="filterMainFeuerwehr">==== Feuerwehr ====</option>
+                               <option id="filterMainRettungsdienst">==== Rettungsdienst ====</option>
+                               <option id="filterMainPolizei">==== Polizei ====</option>
+                               <option id="filterMainTHW">==== THW ====</option>`);
+
     for(var education of educations){
         if($(`#filterSelect option[value="${education.name}"][hiorg="${education.hiorg}"]`).length <= 0){
-            $("#filterSelect").append(`<option value="${education.name}" hiorg="${education.hiorg}">${education.hiorg} - ${education.name}</option>`);
+            $("#filterMain"+education.hiorg).after(`<option value="${education.name}" hiorg="${education.hiorg}">${education.name}</option>`);
         }
     }
 
     $("a").click(function(e) {
         var hiorg = filterLabels.filter((el)=>el.short==e.currentTarget.id.replace("filter",""))[0];
+
+        $("#filterSelect")[0].selectedIndex = 0;
+
         if(hiorg){
             var $this = $(this);
             if($this.hasClass('clicked')){
@@ -73,20 +81,20 @@
 
                         for(var education of educations){
                             if(education.hiorg == hiorg.name){
-                                if(education.show){
+                                if(hiorg.show){
                                     $("#education_schooling_"+education.id).parent().removeClass("filterShow").addClass("filterHide");
-                                    filterLabels[hiorg.sorter].show = false;
                                     educations[education.sorter].show = false;
                                 } else {
                                     $("#education_schooling_"+education.id).parent().removeClass("filterHide").addClass("filterShow");
-                                    filterLabels[hiorg.sorter].show = true;
                                     educations[education.sorter].show = true;
                                 }
                             }
                         }
 
+                        filterLabels[hiorg.sorter].show = !filterLabels[hiorg.sorter].show;
+
                         $("#filter"+hiorg.short).removeClass("btn-danger btn-success")
-                        if(hiorg.show) $("#filter"+hiorg.short).addClass("btn-success");
+                        if(filterLabels[hiorg.sorter].show) $("#filter"+hiorg.short).addClass("btn-success");
                         else $("#filter"+hiorg.short).addClass("btn-danger");
                     }
                 }, 250);
@@ -95,10 +103,14 @@
     });
 
     $("#filterSelect").change(function(e){
-        if(e.target[0].textContent == "Lehrgang wählen") $("#filterSelect option:first").remove();
+        var o = e.target.value;
+        if(~o.indexOf("=")) return false;
+        if(o == "Lehrgang wählen") $("#filterSelect option:first").remove();
+
+        var hiorg = $("option:selected", this).attr("hiorg");
 
         for(var education of educations){
-            if(education.name == e.target.value) {
+            if(education.name == e.target.value && education.hiorg == hiorg) {
                 $("#education_schooling_"+education.id).parent().removeClass("filterHide").addClass("filterShow");
                 educations[education.sorter].show = true;
             } else {
@@ -110,7 +122,6 @@
 
     $("#filterOwnHide").click(function(){
         var executeFilter = "filterShow";
-        console.log($("#schooling_own_table tbody tr:first"));
         if($("#schooling_own_table tbody tr:first").hasClass("filterHide")) {
             $("#schooling_own_table tbody tr:last").remove();
             $("#filterOwnHide").text("(ausblenden)");
