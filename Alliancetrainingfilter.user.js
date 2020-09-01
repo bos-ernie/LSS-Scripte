@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Verbandslehrgaenge filtern
-// @version      1.0.0
+// @version      1.0.1
 // @author       Allure149
 // @include      *://www.leitstellenspiel.de/schoolings
 // @include      *://leitstellenspiel.de/schoolings
@@ -13,7 +13,7 @@
 
     GM_addStyle(`.filterHide{display:none} .filterShow{display:table-row}`);
 
-    $("h3:first").append(`<h6 id="filterOwnHide">(ausblenden)</h6>`);
+    $("h3:first").append(`<h6 id="filterOwnHide" style="cursor:pointer">(ausblenden)</h6>`);
 
     var educations = [];
     $(".schooling_opened_table_searchable").each(function(i){
@@ -38,8 +38,8 @@
     $("#allianceEducationFilter").append(`<select id="filterSelect" class="select optional form-control input-sm"><option>Lehrgang wählen</option></input>`);
 
     for(var education of educations){
-        if($(`#filterSelect option[value="${education.name}"]`).length <= 0){
-            $("#filterSelect").append(`<option value="${education.name}" hiorg="${education.hiorg}">${education.name}</option>`);
+        if($(`#filterSelect option[value="${education.name}"][hiorg="${education.hiorg}"]`).length <= 0){
+            $("#filterSelect").append(`<option value="${education.name}" hiorg="${education.hiorg}">${education.hiorg} - ${education.name}</option>`);
         }
     }
 
