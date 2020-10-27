@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Verbandslehrgaenge filtern
-// @version      1.1.1
+// @version      1.2.0
 // @author       Allure149
 // @include      *://www.leitstellenspiel.de/schoolings
 // @include      *://leitstellenspiel.de/schoolings
@@ -13,7 +13,7 @@
 
     GM_addStyle(`.filterHide{display:none} .filterShow{display:table-row}`);
 
-    $("h3:first").append(`<h6 id="filterOwnHide" style="cursor:pointer">(ausblenden)</h6>`);
+    if(!~$("h3:first").text().indexOf("Offene")) $("h3:first").append(`<h6 id="filterOwnHide" style="cursor:pointer">(ausblenden)</h6>`);
 
     var educations = [];
     $(".schooling_opened_table_searchable").each(function(i){
