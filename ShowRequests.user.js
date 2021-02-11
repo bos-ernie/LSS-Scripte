@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Sprechwuensche anzeigen
-// @version      2.2.1
+// @version      2.3.0
 // @author       Allure149
 // @description  Zeigt Sprechwuensche aller Einsaetze an
 // @include      *://leitstellenspiel.de/*
@@ -11,8 +11,6 @@
 
 (async function() {
     'use strict';
-
-    var disablePrisoners = true;
 
     if(!localStorage.aAlliance || JSON.parse(localStorage.aAlliance).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
         await $.getJSON("/api/allianceinfo").done(function(data) {
@@ -207,7 +205,6 @@
                 } else if(requestPatients) {
                     status = 0;
                 } else if(requestPrisoners) {
-                    if(disablePrisoners) return true;
                     status = 1;
                 } else {
                     status = -1;
@@ -290,7 +287,7 @@
                             });
                             let missionWidth = $this.find("#mission_bar_" + actMissionId).css("width");
 
-                            if(missionTimeDone && (item.status == "0" || item.status == "2") || item.missionOrigin == "RD") missionsDone.push(actMissionId);
+                            if(missionTimeDone || item.missionOrigin == "RD") missionsDone.push(actMissionId);
 
                             if((missionWidth == "0%" && !patientInProgress) || checkMissionAmbulanceOnly){
                                 $("#countSw_" + item.missionId).append(` <div class="glyphicon glyphicon-ok"></div>`);
@@ -424,6 +421,8 @@
         $.get('/missions/'+missionId).done(function(res){
             var $response = $(res);
 
+            $.post("/missions/"+missionId+"/gefangene/entlassen");
+
             $('.building_list_fms_5', $response).each(function(){
                 var $this = $(this).parent().parent();
                 var vehicleId = $('td:nth-child(2) a', $this).attr('href').replace('/vehicles/','');
@@ -443,6 +442,8 @@
 
             var res = await getMissionVehicles('/missions/'+missionId);
             var $response = $(res);
+
+            $.post("/missions/"+missionId+"/gefangene/entlassen");
 
             $('.building_list_fms_5', $response).each(function(){
                 var $this = $(this).parent().parent();
