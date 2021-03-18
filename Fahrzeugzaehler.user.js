@@ -9,8 +9,8 @@
 // @include      *://www.missionchief.co.uk/missions/*
 // @include      *://missionchief.com/missions/*
 // @include      *://www.missionchief.com/missions/*
-// @updateURL    https://github.com/types140/LSS-Scripte/blob/master/Fahrzeugzaehler.user.js
-// @downloadURL  https://github.com/types140/LSS-Scripte/blob/master/Fahrzeugzaehler.user.js
+// @updateURL    https://github.com/types140/LSS-Scripte/raw/master/Fahrzeugzaehler.user.js
+// @downloadURL  https://github.com/types140/LSS-Scripte/raw/master/Fahrzeugzaehler.user.js
 // @grant        GM_addStyle
 // ==/UserScript==
 /* global $,I18n,user_id */
