@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fahrzeugzaehler
-// @version      2.2.0
+// @version      2.2.1
 // @author       Allure149
 // @description  Zaehlt die Fahrzeuge auf Anfahrt und vor Ort von jedem am Einsatz teilnehmenden Kameraden
 // @include      *://leitstellenspiel.de/missions/*
