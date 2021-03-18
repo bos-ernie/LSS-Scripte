@@ -25,7 +25,7 @@
 
     if (!localStorage.aVehicleTypesC || JSON.parse(localStorage.aVehicleTypesC).lastUpdate < (new Date().getTime() - 5 * 60 * 1000)) {
         try {
-            await $.getJSON('https://api.lss-cockpit.de/vehicletypes.json').done((d) => localStorage.setItem('aVehicleTypesC', JSON.stringify({
+            await $.getJSON(`https://api.lss-cockpit.de/${I18n.locale}vehicletypes.json`).done((d) => localStorage.setItem('aVehicleTypesC', JSON.stringify({
                 lastUpdate: new Date().getTime(),
                 value: d
             })));
