@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         Fahrzeugzaehler
-// @version      2.1.2
+// @version      2.2.0
 // @author       Allure149
 // @description  Zaehlt die Fahrzeuge auf Anfahrt und vor Ort von jedem am Einsatz teilnehmenden Kameraden
 // @include      *://leitstellenspiel.de/missions/*
@@ -10,86 +10,161 @@
 // @include      *://missionchief.com/missions/*
 // @include      *://www.missionchief.com/missions/*
 // @updateURL    https://github.com/types140/LSS-Scripte/blob/master/Fahrzeugzaehler.user.js
-// @grant        none
+// @downloadURL  https://github.com/types140/LSS-Scripte/blob/master/Fahrzeugzaehler.user.js
+// @grant        GM_addStyle
 // ==/UserScript==
-/* global $ */
+/* global $,I18n,user_id */
 
-$(function() {
+(async function () {
     'use strict';
 
-    $("head").append(`
-        <style>
-            #fzTable { display:none; position:absolute; z-index: 1000; width: 60% !important; }
-            #fzTable tr:nth-child(even) { background-color: dimgrey; }
-        </style>
+    GM_addStyle(`
+        .fzTable { display:none; position:absolute; z-index: 1000; width: 60% !important; }
+        .fzTable tr:nth-child(even) { background-color: dimgrey; }
     `);
 
-    let textOwnCars, textCars, textPlayers;
-    if(I18n.locale == "de_DE"){
-        textOwnCars = "Eigene Fahrzeuge";
-        textCars = "Fahrzeuge";
-        textPlayers = "Spieler";
-    } else if(I18n.locale == "en_US"){
-        textOwnCars = "Own vehicles";
-        textCars = "Vehicles";
-        textPlayers = "Players";
-    } else if(I18n.locale == "en_GB"){
-        textOwnCars = "Own vehicles";
-        textCars = "Vehicles";
-        textPlayers = "Players";
-    }
-
-    function isInArray(str, arr){
-        for(let i = 0; i < arr.length; i++){
-            if(str === arr[i].name) return true;
+    if (!localStorage.aVehicleTypesC || JSON.parse(localStorage.aVehicleTypesC).lastUpdate < (new Date().getTime() - 5 * 60 * 1000)) {
+        try {
+            await $.getJSON('https://api.lss-cockpit.de/vehicletypes.json').done((d) => localStorage.setItem('aVehicleTypesC', JSON.stringify({
+                lastUpdate: new Date().getTime(),
+                value: d
+            })));
+        } catch (e) {
+            console.error(e.message);
+            return false;
         }
-        return false;
     }
 
-    let arrNames = [];
+    var aVehicleTypesC = JSON.parse(localStorage.aVehicleTypesC).value;
 
-    function fzMain(){
-        let outputText = "";
-        let strName = "";
-        let ownId = "";
-        arrNames = [];
+    const oLang = {
+        de_DE: {
+            ownVehicles: "Eigene Fahrzeuge",
+            vehicles: "Fahrzeuge",
+            vehicleTypes: "Fahrzeugtypen",
+            players: "Spieler"
+        },
+        en_US: {
+            ownCars: "Own vehicles",
+            cars: "Vehicles",
+            vehicleTypes: "Vehicletypes",
+            players: "Players"
+        },
+        en_GB: {
+            ownCars: "Own vehicles",
+            cars: "Vehicles",
+            vehicleTypes: "Vehicletypes",
+            players: "Players"
+        }
+    };
 
-        $("#mission_vehicle_driving >> tr, #mission_vehicle_at_mission >> tr").each(function() {
-            if($(this).find("a[href^='/profile/']:first").attr("href") === undefined) return true;
-            else ownId = parseInt($(this).find("a[href^='/profile/']:first").attr("href").replace("/profile/", ""));
+    const sortObjectByCount = (o, d) => d == "desc" ? o.sort((a, b) => a.vcount < b.vcount) : d == "asc" ? o.sort((a, b) => a.vcount > b.vcount) : false;
 
-            if(ownId == user_id) return true;
+    var fzPlayers = [],
+        fzVehicles = [],
+        vehiclesCount = 0,
+        ownVehicle = {};
 
-            strName = $(this).find("a[href^='/profile/']:first").text();
-            if(isInArray(strName, arrNames)) arrNames.map(record => { if(record.name == strName) record.count++; });
-            else if(strName != "") arrNames.push({ name: strName, count: 1 });
+    function scanVehicles() {
+        $("#mission_vehicle_driving tbody tr, #mission_vehicle_at_mission tbody tr").each(function () {
+            var $this = $(this);
+            var playerProfile = $("a[href^='/profile/']:first", $this) || false;
+
+            if (!playerProfile.length) return true;
+
+            var playerId = +playerProfile.attr("href").replace("/profile/", "");
+            var playerName = playerProfile.text();
+            var vehicle = aVehicleTypesC[$("td:nth-child(2) a", $this).attr("vehicle_type_id")].short_name;
+
+            var playerIndex = fzPlayers.findIndex((e) => e.pid == playerId);
+            if (playerId == user_id) {
+                if ($.isEmptyObject(ownVehicle)) {
+                    ownVehicle = {
+                        pid: playerId,
+                        pname: oLang[I18n.locale].ownVehicles,
+                        vcount: 1
+                    };
+                } else {
+                    ownVehicle.vcount++;
+                }
+            } else {
+                if (playerIndex == -1) {
+                    fzPlayers.push({
+                        pid: playerId,
+                        pname: playerName,
+                        vcount: 1
+                    });
+                } else {
+                    fzPlayers[playerIndex].vcount++;
+                }
+            }
+
+            var vehicleIndex = fzVehicles.findIndex((e) => e.vname == vehicle);
+            if (vehicleIndex == -1) {
+                fzVehicles.push({
+                    vname: vehicle,
+                    vcount: 1
+                });
+            } else {
+                fzVehicles[vehicleIndex].vcount++;
+            }
+
+            vehiclesCount++;
         });
 
-        arrNames.sort(function(a, b) { return a.count < b.count; });
+        /**
+         *	Sortiermoeglichkeiten:
+         *	asc = aufsteigend
+         *	desc = absteigend
+         */
+        var sortedPlayers = sortObjectByCount(fzPlayers, "desc").unshift(ownVehicle);
+        var sortedVehicles = sortObjectByCount(fzVehicles, "desc");
 
-        outputText = `<table id="fzTable" class="table table-dark mission_header_info table-condensed"><tr class="panel-heading"><td>${textOwnCars}</td><td>${ownVehiclesOnDrive + ownVehiclesAtMission}</td></tr>`;
-        for(let j = 0; j < arrNames.length; j++){
-            outputText += `<tr><td>${arrNames[j].name}</td><td>${arrNames[j].count}</td></tr>`;
-        };
-        outputText += `</table>`;
-
-        $("#fzCars").after(outputText);
+        if (!sortedPlayers || !sortedVehicles) {
+            console.error("Suchmethode unbekannt!");
+            return false;
+        }
     }
 
-    let ownVehiclesOnDrive = $("#mission_vehicle_driving >> tr").find("td.hidden-xs >> a.btn-backalarm-ajax").length;
-    let ownVehiclesAtMission = $("#mission_vehicle_at_mission").find(".btn-backalarm-ajax").length;
-    let allVehiclesOnDrive = $("#mission_vehicle_driving >> tr[id^='vehicle_row_']").length;
-    let allVehiclesAtMission = $("#mission_vehicle_at_mission >> tr[id^='vehicle_row_']").length;
-    fzMain();
+    function writeOutput() {
+        $("#amount_of_people").append(`
+            <span id="fzPlayers">${ oLang[I18n.locale].players } <span class="label" style="background-color: dimgrey;">${ fzPlayers.length }</span></span>
+            <span id="fzVehicles">${ oLang[I18n.locale].vehicles } <span class="label label-default">${ vehiclesCount }</span></span>
+            <span id="fzVehicleTypes">${ oLang[I18n.locale].vehicleTypes } <span class="label" style="background-color: dimgrey;">${ fzVehicles.length }</span></span>
+        `);
 
-    $("#amount_of_people").append(`<span id="fzCars">${textCars} <span class="label label-default">${allVehiclesOnDrive + allVehiclesAtMission}</span></span>
-                                   <span id="fzPlayers">${textPlayers} <span class="label" style="background-color: dimgrey;">${ownVehiclesOnDrive + ownVehiclesAtMission != 0 ? arrNames.length + 1 : arrNames.length}</span></span>`);
+    }
 
-    $("#fzCars").hover(() => {
-        fzMain();
+    function writeVehicleTable() {
+        var outputText = `<table id="fzVehiclesTable" class="table table-dark mission_header_info table-condensed fzTable">`;
+        outputText += fzPlayers.map((e) => `<tr><td>${e.pname}</td><td>${e.vcount}</td></tr>`).join("");
+        outputText += `</table>`;
+        $("#fzVehicles").after(outputText);
+    }
+
+    function writeVehicleTypesTable() {
+        var outputText = `<table id="fzVehicleTypesTable" class="table table-dark mission_header_info table-condensed fzTable">`;
+        outputText += fzVehicles.map((e) => `<tr><td>${e.vname}</td><td>${e.vcount}</td></tr>`).join("");
+        outputText += `</table>`;
+        $("#fzVehicleTypes").after(outputText);
+    }
+
+    scanVehicles();
+    writeOutput();
+
+    $("#fzVehicles").hover(() => {
+        writeVehicleTable();
         $("#amount_of_people").removeAttr("title");
-        $("#fzTable").stop(true,true).fadeIn();
+        $("#fzVehiclesTable").stop(true, true).fadeIn();
     }, () => {
-        $.when($("#fzTable").stop(true,true).fadeOut()).done(() => $("#fzTable").remove());
+        $.when($("#fzVehiclesTable").stop(true, true).fadeOut()).done(() => $("#fzVehiclesTable").remove());
     });
-});
+
+    $("#fzVehicleTypes").hover(() => {
+        writeVehicleTypesTable();
+        $("#amount_of_people").removeAttr("title");
+        $("#fzVehicleTypesTable").stop(true, true).fadeIn();
+    }, () => {
+        $.when($("#fzVehicleTypesTable").stop(true, true).fadeOut()).done(() => $("#fzVehicleTypesTable").remove());
+    });
+})();
