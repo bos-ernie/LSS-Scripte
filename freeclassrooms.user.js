@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FreeClassrooms
-// @description  Zeigt die Anzahl freie Schulungsraeume pro Schule in der Gebaeudeuebersicht der Hauptseite an
-// @version      1.1.1
+// @description  Zeigt die Anzahl freier Schulungsraeume pro Schule sowie freie Betten pro Krankenhaus in der Gebaeudeuebersicht der Hauptseite an
+// @version      1.2.0
 // @author       Allure149
 // @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de)\/$/
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/freeclassrooms.user.js
@@ -11,6 +11,13 @@
 
 (function() {
     'use strict';
+
+    async function loadBuildingsApi(){
+        if(!sessionStorage.aBuildings || JSON.parse(sessionStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
+            await $.getJSON("/api/buildings.json").done(data => sessionStorage.setItem("aBuildings", JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+        }
+        return JSON.parse(sessionStorage.aBuildings).value;
+    }
 
     function publishInfos(id,free){
         let getStateColor = function(free){
@@ -28,12 +35,12 @@
         $("#building_list_caption_"+id).append(`<span class="badge progress-bar-${getStateColor(free)}" style="margin-left: 5px">${free}</span>`);
     }
 
-    $.getJSON("/api/buildings.json", function(data){
-        let d = data;
+    async function collectData(){
+        let aBuildings = await loadBuildingsApi();
         const includedBuildings = [1,3,8,10]; //alle Schulen
 
-        for(let i = 0; i < d.length; i++){
-            let currentBuilding = d[i];
+        for(let i = 0; i < aBuildings.length; i++){
+            let currentBuilding = aBuildings[i];
             let schoolExtensions = 1;
 
             if(currentBuilding.building_type === 4){
@@ -52,5 +59,12 @@
                 publishInfos(currentBuilding.id,schoolExtensions-countSchoolings);
             }
         }
-    });
+    }
+
+    collectData();
+
+    MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
+    var observer = new MutationObserver(function(mutations, observer){
+        if($("#btn-group-building-select").length === 1) collectData();
+    }).observe($("#buildings")[0],{childList: true});
 })();
