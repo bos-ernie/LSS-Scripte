@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FreeClassrooms
 // @description  Zeigt die Anzahl freie Schulungsraeume pro Schule in der Gebaeudeuebersicht der Hauptseite an
-// @version      1.1.0
+// @version      1.1.1
 // @author       Allure149
 // @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de)\/$/
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/freeclassrooms.user.js
@@ -42,14 +42,14 @@
 
                 publishInfos(currentBuilding.id,buildingLevel-countPatients);
             } else if(includedBuildings.includes(currentBuilding.building_type) && currentBuilding.schoolings){
-                var countExtensions = currentBuilding.schoolings.length;
+                var countSchoolings = currentBuilding.schoolings.length;
 
                 for(let j = 0; j < currentBuilding.extensions.length; j++){
                     let currentExtension = currentBuilding.extensions[j];
-                    if(currentExtension.available) countExtensions++;
+                    if(currentExtension.available) schoolExtensions++;
                 }
 
-                publishInfos(currentBuilding.id,countExtensions-countExtensions);
+                publishInfos(currentBuilding.id,schoolExtensions-countSchoolings);
             }
         }
     });
