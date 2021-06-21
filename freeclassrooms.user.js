@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FreeClassrooms
 // @description  Zeigt die Anzahl freier Schulungsraeume pro Schule sowie freie Betten pro Krankenhaus in der Gebaeudeuebersicht der Hauptseite an
-// @version      1.3.1
+// @version      1.3.2
 // @author       Allure149
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|(politiet\.)?nodsentralspillet|(politie\.)?meldkamerspel|operador193|(policia\.)?jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|(policja\.)?operatorratunkowy\.pl|dispetcher112\.ru|(polis\.)?larmcentralen-spelet\.se)\/$/
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/freeclassrooms.user.js
@@ -94,7 +94,15 @@
             } else if("prisoner_count" in currentBuilding){
                 let countPrisoners = currentBuilding.prisoner_count;
 
-                publishInfos(currentBuilding.id,currentBuilding.level-countPrisoners);
+                let prisonExtensionCounter = 0;
+
+                for(let j = 0; j < currentBuilding.extensions.length; j++){
+                    let currentExtension = currentBuilding.extensions[j];
+                    if(currentExtension.caption.match(/Zelle|cell|buňka|ĉelo|cel|solu|sejt|cill|célula/)&&
+                       currentExtension.available) prisonExtensionCounter++;
+                }
+
+                publishInfos(currentBuilding.id,prisonExtensionCounter-countPrisoners);
             } else if("schoolings" in currentBuilding){
                 let countSchoolings = currentBuilding.schoolings.length;
                 let schoolExtensions = 1;
