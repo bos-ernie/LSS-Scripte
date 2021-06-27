@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         FreeClassrooms
 // @description  Zeigt die Anzahl freier Schulungsraeume pro Schule sowie freie Betten pro Krankenhaus in der Gebaeudeuebersicht der Hauptseite an
-// @version      1.3.2
+// @version      1.3.3
 // @author       Allure149
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|(politiet\.)?nodsentralspillet|(politie\.)?meldkamerspel|operador193|(policia\.)?jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|(policja\.)?operatorratunkowy\.pl|dispetcher112\.ru|(polis\.)?larmcentralen-spelet\.se)\/$/
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/freeclassrooms.user.js
@@ -27,6 +27,8 @@
     }
 
     function loadBuildings(buildings){
+        let hideAllianceCell = $("#building_selection_polizei").hasClass("btn-danger");
+
         for(let i = 0; i < buildings.length; i++){
             let currBuilding = buildings[i];
 
@@ -51,13 +53,13 @@
             }
 
             $("#building_list").prepend(`
-    	<li class="building_list_li category_selected" building_type_id="${currBuilding.building_type}" leitstelle_building_id="${currBuilding.leitstelle_building_id}" style="display: list-item;">
-      	<div class="building_list_caption" id="building_list_caption_${currBuilding.id}">
-        	<a href="/buildings/${currBuilding.id}" building_type="0" class="btn btn-xs pull-right btn-default lightbox-open" id="building_button_${currBuilding.id}">Details</a>
-          <img class="building_marker_image" building_id="${currBuilding.id}" src="/images/${buildingImage(currBuilding.building_type)}.png">
-          <a href="" class="map_position_mover" data-latitude="${currBuilding.latitude}" data-longitude="${currBuilding.longitude}">${currBuilding.caption}</a>
-        </div>
-      </li>`);
+    	      <li class="building_list_li${(hideAllianceCell?"":" category_selected")}" building_type_id="${currBuilding.building_type}" leitstelle_building_id="${currBuilding.leitstelle_building_id}" style="display: ${(hideAllianceCell?"none":"list-item")};">
+      	        <div class="building_list_caption" id="building_list_caption_${currBuilding.id}">
+                	<a href="/buildings/${currBuilding.id}" building_type="0" class="btn btn-xs pull-right btn-default lightbox-open" id="building_button_${currBuilding.id}">Details</a>
+                  <img class="building_marker_image" building_id="${currBuilding.id}" src="/images/${buildingImage(currBuilding.building_type)}.png">
+                  <a href="" class="map_position_mover" data-latitude="${currBuilding.latitude}" data-longitude="${currBuilding.longitude}">${currBuilding.caption}</a>
+                </div>
+              </li>`);
         }
 
         let buildingTypeIds = $("#building_selection_polizei").attr("building_Type_ids");
@@ -66,15 +68,9 @@
 
     function publishInfos(id,free){
         let getStateColor = function(free){
-            switch(free){
-                case 0: return "danger";
-                    break;
-                case 1:
-                case 2: return "warning";
-                    break;
-
-                default: return "success";
-            }
+            if(free <= 0) return "danger";
+            else if (free <= 2) return "warning";
+            else return "success";
         }
 
         $("#building_list_caption_"+id).append(`<span class="badge progress-bar-${getStateColor(free)}" style="margin-left: 5px">${free}</span>`);
