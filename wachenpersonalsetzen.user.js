@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Wachenpersonal setzen
 // @description  Massenbearbeitung des Maximal-Personals der Wachen
-// @version      1.0.0
+// @version      1.0.1
 // @author       Allure149
 // @include      /^https?:\/\/(?:w{3}\.)?(?:(policie\.)?operacni-stredisko\.cz|(politi\.)?alarmcentral-spil\.dk|(polizei\.)?leitstellenspiel\.de|(?:(police\.)?missionchief-australia|(police\.)?missionchief|(poliisi\.)?hatakeskuspeli|missionchief-japan|missionchief-korea|(politiet\.)?nodsentralspillet|(politie\.)?meldkamerspel|operador193|(policia\.)?jogo-operador112|jocdispecerat112|dispecerske-centrum|112-merkez|dyspetcher101-game)\.com|(police\.)?missionchief\.co\.uk|centro-de-mando\.es|centro-de-mando\.mx|(police\.)?operateur112\.fr|(polizia\.)?operatore112\.it|(policja\.)?operatorratunkowy\.pl|dispetcher112\.ru|(polis\.)?larmcentralen-spelet\.se)\/buildings\/.*$/
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/wachenpersonalsetzen.user.js
@@ -73,7 +73,6 @@
                             countDoneTypes++;
                             $("#building_personal_count_target_"+buildingId).text(maxPers);
                             $("#persOut").text(`${countDoneTypes} von ${countSelectedTypes} ${selectedTypeName} auf ${maxPers} Personaler gesetzt.`);
-                            console.log("Wache Nr. " + countDoneTypes + " in " + (Date.now() - timerStart) + " ms");
                         });
                     },countLoopings*250);
                 }
