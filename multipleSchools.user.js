@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MultipleSchools
-// @version      1.0.1
+// @version      1.0.2
 // @description  Use more than 4 classes at once
 // @author       Allure149
 // @match        https://*.leitstellenspiel.de/buildings/*
@@ -11,6 +11,13 @@
 /* global $ */
 
 (async function(){
+    var schoolToSearch = +$("h1:first").attr("building_type") || null;
+    var accessibleBuildings = [1,3,8,10];
+
+    if(schoolToSearch != null && !accessibleBuildings.includes(schoolToSearch)){
+        return false;
+    }
+
     async function loadBuildingsApi(){
         if(!sessionStorage.aBuildings || JSON.parse(sessionStorage.aBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
             await $.getJSON("/api/buildings.json").done(data => sessionStorage.setItem("aBuildings", JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
@@ -19,10 +26,18 @@
     }
 
     var aBuildings = await loadBuildingsApi();
-    var schoolToSearch = $("h1:first").attr("building_type");
     var freeClasses = 1;
     var schoolsToUse = [];
     var personalIds = [];
+
+    if($("#building_rooms_use").length == 0){
+        $("h3:first").before(`<label for="building_rooms_use">Wieviele Räume sollen für diese Ausbildung genutzt werden? </label>
+                              <select id="building_rooms_use" name="building_rooms_use">
+                                  <option value="1">1</option>
+                              </select>`);
+
+    }
+    $("input[name=commit]:last").after(`<input class="btn btn-success" name="multiple_commits" value="Ausbilden"><div class="msOutput"></div>`).remove();
 
     for(var building of aBuildings){
         freeClasses = 1;
@@ -44,8 +59,6 @@
         $("#building_rooms_use").append(`<option value="${i}">${i}</option>`);
     }
 
-    $("input[name=commit]:last").after(`<input class="btn btn-success" name="multiple_commits" value="Ausbilden"><div class="msOutput"></div>`).remove();
-
     $("input[name=multiple_commits]").on("click", async function(){
         $(".msOutput").html(`<span class="label label-warning" style="font-size: 14px">Informationen werden zusammengestellt. Bitte warten ...</span>`);
         for(var counter in $(".schooling_checkbox")){
@@ -62,7 +75,7 @@
             }
         })();
 
-        var classCounter = Math.ceil(personalIds.length/10);
+        var classCounter = +$("#building_rooms_use")[0].value;//Math.ceil(personalIds.length/10);
         var auswertung = {"schulen": 0, "klassen": classCounter};
 
         var persTemp = [];
@@ -80,7 +93,21 @@
 
             var usedClasses = classCounter <= school.free ? classCounter : school.free;
 
-            await $.post("/buildings/" + school.id + "/education", {"education": education, "personal_ids": persTemp, "building_rooms_use": usedClasses}, function(){
+            var params = {
+                "education": education,
+                "personal_ids": persTemp,
+                "building_rooms_use": usedClasses
+            }
+
+            if($("#alliance_duration")[0].value != 0){
+                params.alliance = {
+                    "duration": $("#alliance_duration")[0].value,
+                    "cost": $("#alliance_cost")[0].value
+                };
+            }
+
+            //
+            await $.post("/buildings/" + school.id + "/education", params, function(){
                 $(".msOutput").html(`<span class="label label-warning" style="font-size: 14px">${school.name} wurde über ${usedClasses} ${(usedClasses==1?"neuen Lehrgang":"neue Lehrgänge")} informiert.</span>`);
             });
 
