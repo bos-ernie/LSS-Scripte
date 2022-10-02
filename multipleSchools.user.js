@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MultipleSchools
-// @version      1.0.0
+// @version      1.0.1
 // @description  Use more than 4 classes at once
 // @author       Allure149
 // @match        https://*.leitstellenspiel.de/buildings/*
@@ -44,9 +44,10 @@
         $("#building_rooms_use").append(`<option value="${i}">${i}</option>`);
     }
 
-    $("input[name=commit]").after(`<input class="btn btn-success" name="multiple_commits" value="Ausbilden"><div class="msOutput"></div>`).remove();
+    $("input[name=commit]:last").after(`<input class="btn btn-success" name="multiple_commits" value="Ausbilden"><div class="msOutput"></div>`).remove();
 
     $("input[name=multiple_commits]").on("click", async function(){
+        $(".msOutput").html(`<span class="label label-warning" style="font-size: 14px">Informationen werden zusammengestellt. Bitte warten ...</span>`);
         for(var counter in $(".schooling_checkbox")){
             var el = $(".schooling_checkbox")[counter];
             var usePersonal = el.checked;
@@ -61,10 +62,12 @@
             }
         })();
 
-        var schoolCounter = Math.ceil(personalIds.length/10);
+        var classCounter = Math.ceil(personalIds.length/10);
+        var auswertung = {"schulen": 0, "klassen": classCounter};
 
         var persTemp = [];
         for(var school of schoolsToUse){
+            auswertung.schulen++;
             persTemp = [];
             var loopCounter = school.free * 10 > personalIds.length ? personalIds.length : school.free * 10;
 
@@ -75,16 +78,16 @@
                 if(personalIds.length == 0) break;
             }
 
-            var usedClasses = schoolCounter <= school.free ? schoolCounter : school.free;
+            var usedClasses = classCounter <= school.free ? classCounter : school.free;
 
             await $.post("/buildings/" + school.id + "/education", {"education": education, "personal_ids": persTemp, "building_rooms_use": usedClasses}, function(){
-                $(".msOutput").text(school.name + " über " + usedClasses + " neue Lehrgänge informiert.");
+                $(".msOutput").html(`<span class="label label-warning" style="font-size: 14px">${school.name} wurde über ${usedClasses} ${(usedClasses==1?"neuen Lehrgang":"neue Lehrgänge")} informiert.</span>`);
             });
 
-            schoolCounter -= school.free;
-            if(schoolCounter <= 0) break;
+            classCounter -= school.free;
+            if(classCounter <= 0) break;
         }
 
-        window.location.reload();
+        $(".msOutput").html(`<span class="label label-success" style="font-size: 14px">${auswertung.schulen} ${(auswertung.schulen==1?"Schule wurde":"Schulen wurden")} über ${auswertung.klassen} ${(auswertung.klassen==1?"neuen Lehrgang":"neue Lehrgänge")} erfolgreich informiert.</span>`);
     });
 })();
