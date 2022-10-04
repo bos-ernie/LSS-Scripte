@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MultipleSchools
-// @version      1.0.4
+// @version      1.0.5
 // @description  Use more than 4 classes at once
 // @author       Allure149
 // @match        https://*.leitstellenspiel.de/buildings/*
@@ -25,6 +25,13 @@
         return JSON.parse(sessionStorage.aBuildings).value;
     }
 
+    async function loadAllianceBuildingsApi(){
+        if(!sessionStorage.aAllianceBuildings || JSON.parse(sessionStorage.aAllianceBuildings).lastUpdate < (new Date().getTime() - 5 * 1000 * 60)) {
+            await $.getJSON("/api/alliance_buildings.json").done(data => sessionStorage.setItem("aAllianceBuildings", JSON.stringify({lastUpdate: new Date().getTime(), value: data})) );
+        }
+        return JSON.parse(sessionStorage.aAllianceBuildings).value;
+    }
+
     var aBuildings = await loadBuildingsApi();
     var personalIds = [];
 
@@ -33,10 +40,19 @@
     var thisSchoolFreeClasses = $("#building_rooms_use option").length;
     var schoolsToUse = [{"id": thisSchoolId, "name": thisSchoolName, "free": thisSchoolFreeClasses}];
 
+    var searchThroughBuildings = await (async function(){
+        if($(".dl-horizontal:first a").length > 0 && $(".dl-horizontal:first a").attr("href").indexOf("alliances") > -1){
+            var aAllianceBuildings = await loadAllianceBuildingsApi();
+            return aAllianceBuildings;
+        } else {
+            return aBuildings;
+        }
+    })();
+
     var freeClasses = 1;
-    for(var building of aBuildings){
+    for(var building of searchThroughBuildings){
         freeClasses = 1;
-        if(building.building_type == schoolToSearch){
+        if(building.building_type == schoolToSearch && building.caption != thisSchoolName){
             for(var extension of building.extensions){
                 if(extension.available && extension.enabled) freeClasses++;
             }
