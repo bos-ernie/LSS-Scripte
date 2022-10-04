@@ -1,10 +1,9 @@
 // ==UserScript==
 // @name         MultipleSchools
-// @version      1.0.3
+// @version      1.0.4
 // @description  Use more than 4 classes at once
 // @author       Allure149
 // @match        https://*.leitstellenspiel.de/buildings/*
-// @exclude      https://*.leitstellenspiel.de/buildings/*/edit
 // @grant        none
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/multipleSchools.user.js
 // @downloadURL  https://github.com/types140/LSS-Scripte/raw/master/multipleSchools.user.js
@@ -15,7 +14,7 @@
     var schoolToSearch = +$("h1:first").attr("building_type") || null;
     var accessibleBuildings = [1,3,8,10];
 
-    if(schoolToSearch != null && !accessibleBuildings.includes(schoolToSearch)){
+    if(schoolToSearch == null || !accessibleBuildings.includes(schoolToSearch)){
         return false;
     }
 
@@ -27,9 +26,29 @@
     }
 
     var aBuildings = await loadBuildingsApi();
-    var freeClasses = 1;
-    var schoolsToUse = [];
     var personalIds = [];
+
+    var thisSchoolId = +window.location.pathname.match((/[0-9]+/));
+    var thisSchoolName = $("h1:first").text();
+    var thisSchoolFreeClasses = $("#building_rooms_use option").length;
+    var schoolsToUse = [{"id": thisSchoolId, "name": thisSchoolName, "free": thisSchoolFreeClasses}];
+
+    var freeClasses = 1;
+    for(var building of aBuildings){
+        freeClasses = 1;
+        if(building.building_type == schoolToSearch){
+            for(var extension of building.extensions){
+                if(extension.available && extension.enabled) freeClasses++;
+            }
+
+            if(building.schoolings.length > 0) freeClasses -= building.schoolings.length;
+            if(freeClasses > 0) schoolsToUse.push({"id": building.id, "name": building.caption, "free": freeClasses});
+        }
+    }
+
+    schoolsToUse.sort((a,b)=>a.name>b.name);
+
+    var savedSchoolsToUse = schoolsToUse;
 
     if($("#building_rooms_use").length == 0){
         $("h3:first").before(`<label for="building_rooms_use">Wieviele Räume sollen für diese Ausbildung genutzt werden? </label>
@@ -42,38 +61,63 @@
     $("input[name=commit]:last").after(`<span class="btn btn-success navbar-btn" id="multiple_commits">Ausbilden</span>`);
     $("input[name=commit]").remove();
 
-    for(var building of aBuildings){
-        freeClasses = 1;
-        if(building.building_type == schoolToSearch){
-            for(var extension of building.extensions){
-                if(extension.available && extension.enabled) freeClasses++;
-            }
+    $("#building_rooms_use").after(`<br><label for="multipleClassesSelect">Sollen spezielle Schulen genutzt werden?</label> <input class="form-check-input" type="checkbox" value="" id="cbxMultipleClassrooms"><select multiple="" class="form-control hidden" id="multipleClassesSelect" style="height:10em;width:32em"></select>`);
 
-            if(building.schoolings.length > 0) freeClasses -= building.schoolings.length;
+    for(var school of schoolsToUse){
+        if(school.name != thisSchoolName) $("#multipleClassesSelect").append(`<option value="${school.free}" building_id="${school.id}">${school.name}</option>`);
+    }
 
-            if(freeClasses > 0) schoolsToUse.push({"id": building.id, "name": building.caption, "free": freeClasses});
+    var freeTotal = (function(){
+        var multivalues = $("#multipleClassesSelect").val();
+        if(multivalues && multivalues.val().length > 0) return $("#multipleClassesSelect").val().map((s)=>Number(s)).reduce((a,b)=>a+b,0);
+        else return Object.values(schoolsToUse).reduce((a,b)=>a+b.free,0);
+    })();
+
+    function createGlobalOptions(){
+        $("#building_rooms_use option").remove();
+        for(var i = 1; i <= freeTotal+thisSchoolFreeClasses+1; i++){
+            $("#building_rooms_use").append(`<option value="${i}">${i}</option>`);
         }
     }
 
-    //$("#building_rooms_use").after(`<select multiple="" class="form-control" id="multipleClassesSelect" style="height:10em;width:32em"></select>`);
+    createGlobalOptions();
 
-    //schoolsToUse.sort((a,b)=>a.name>b.name);
-    //for(var school of schoolsToUse){
-    //    $("#multipleClassesSelect").append(`<option value="${school.free}">${school.name}</option>`);
-    //}
+    $("#cbxMultipleClassrooms").on("change", function(a){
+        $("#multipleClassesSelect option:selected").each(function(){
+            $(this).prop("selected", false);
+        });
 
-    //$("#multipleClassesSelect").on("change", function(){
-    //    update_schooling_free();
+        schoolsToUse = savedSchoolsToUse;
+        createGlobalOptions();
 
-    //    console.log($(this).val());
-    //});
+        if(a.target.checked) $("#multipleClassesSelect").removeClass("hidden");
+        else $("#multipleClassesSelect").addClass("hidden");
+    });
 
-    var freeTotal = Object.values(schoolsToUse).reduce((a,b)=>a+b.free,0);
-    var freeThisBuilding = $("#building_rooms_use option").length;
+    $("#multipleClassesSelect").on("change", function(){
+        update_schooling_free();
 
-    for(var i = freeThisBuilding+1; i <= freeTotal; i++){
-        $("#building_rooms_use").append(`<option value="${i}">${i}</option>`);
-    }
+        var classCounter = 0;
+
+        schoolsToUse = [{"id": thisSchoolId, "name": thisSchoolName, "free": thisSchoolFreeClasses}];
+
+        $("#building_rooms_use option").remove();
+        var options = $("option:selected", this);
+        if(options.length == 0) {
+            createGlobalOptions();
+            schoolsToUse = savedSchoolsToUse;
+        } else {
+            for(var i = 0; i < options.length; i++){
+                var el = options[i];
+                schoolsToUse.push({"id": +el.attributes.building_id.value, "name": el.text, "free": +el.value});
+                classCounter += +el.value;
+            }
+
+            for(var j = 1; j <= classCounter+thisSchoolFreeClasses; j++){
+                $("#building_rooms_use").append(`<option value="${j}">${j}</option>`);
+            }
+        }
+    });
 
     $("#multiple_commits").on("click", async function(){
         $("#multiple_commits").after(`<span id="multipleClassesOutput" class="label label-warning" style="font-size: 14px">Informationen werden zusammengestellt. Bitte warten ...</span>`);
@@ -89,7 +133,7 @@
 
                 if(el && el.checked) return +el.attributes.value.value;
             }
-        })();
+        });
 
         var classCounter = +$("#building_rooms_use")[0].value;
         var auswertung = {"schulen": 0, "klassen": classCounter};
