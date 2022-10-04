@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MultipleSchools
-// @version      1.0.5
+// @version      1.0.6
 // @description  Use more than 4 classes at once
 // @author       Allure149
 // @match        https://*.leitstellenspiel.de/buildings/*
@@ -37,7 +37,7 @@
 
     var thisSchoolId = +window.location.pathname.match((/[0-9]+/));
     var thisSchoolName = $("h1:first").text();
-    var thisSchoolFreeClasses = $("#building_rooms_use option").length;
+    var thisSchoolFreeClasses = $("#building_rooms_use option").length || 1;
     var schoolsToUse = [{"id": thisSchoolId, "name": thisSchoolName, "free": thisSchoolFreeClasses}];
 
     var searchThroughBuildings = await (async function(){
@@ -58,7 +58,9 @@
             }
 
             if(building.schoolings.length > 0) freeClasses -= building.schoolings.length;
-            if(freeClasses > 0) schoolsToUse.push({"id": building.id, "name": building.caption, "free": freeClasses});
+            if(freeClasses > 0) {
+                schoolsToUse.push({"id": building.id, "name": building.caption, "free": freeClasses});
+            }
         }
     }
 
@@ -91,12 +93,18 @@
 
     function createGlobalOptions(){
         $("#building_rooms_use option").remove();
-        for(var i = 1; i <= freeTotal+thisSchoolFreeClasses+1; i++){
+        console.log(freeTotal);
+        for(var i = 1; i <= freeTotal; i++){
             $("#building_rooms_use").append(`<option value="${i}">${i}</option>`);
         }
     }
 
+    console.log(schoolsToUse);
     createGlobalOptions();
+
+    $("#building_rooms_use").on("change", function(){
+        update_schooling_free();
+    });
 
     $("#cbxMultipleClassrooms").on("change", function(a){
         $("#multipleClassesSelect option:selected").each(function(){
