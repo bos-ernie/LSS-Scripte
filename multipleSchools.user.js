@@ -93,13 +93,11 @@
 
     function createGlobalOptions(){
         $("#building_rooms_use option").remove();
-        console.log(freeTotal);
         for(var i = 1; i <= freeTotal; i++){
             $("#building_rooms_use").append(`<option value="${i}">${i}</option>`);
         }
     }
 
-    console.log(schoolsToUse);
     createGlobalOptions();
 
     $("#building_rooms_use").on("change", function(){
