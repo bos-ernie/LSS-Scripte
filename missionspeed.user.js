@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MissionSpeed
-// @version      2.1.1
+// @version      2.1.3
 // @author       Allure149
 // @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de|missionchief\.co\.uk|missionchief\.com|meldkamerspel\.com|centro-de-mando\.es|missionchief-australia\.com|larmcentralen-spelet\.se|operatorratunkowy\.pl|operatore112\.it|operateur112\.fr|dispetcher112\.ru|alarmcentral-spil\.dk|nodsentralspillet\.com|operacni-stredisko\.cz|112-merkez\.com|jogo-operador112\.com|operador193\.com|centro-de-mando\.mx|dyspetcher101-game\.com|missionchief-korea\.com|missionchief-japan\.com|jocdispecerat112\.com)\/.*$/
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/missionspeed.user.js
@@ -67,10 +67,10 @@
             case "mspl": $.get('/missionSpeed?speed=0');
                          mission_speed = 0;
                 break;
-            case "mssf": $.get('/missionSpeed?speed=7');
+            case "msf": $.get('/missionSpeed?speed=7');
                          mission_speed = 7;
                 break;
-            case "msf": $.get('/missionSpeed?speed=1');
+            case "mssf": $.get('/missionSpeed?speed=1');
                          mission_speed = 1;
                 break;
             case "msff": $.get('/missionSpeed?speed=2');
