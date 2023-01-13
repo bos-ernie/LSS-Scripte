@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         MissionSpeed
-// @version      2.1.3
+// @version      2.1.4
 // @author       Allure149
 // @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de|missionchief\.co\.uk|missionchief\.com|meldkamerspel\.com|centro-de-mando\.es|missionchief-australia\.com|larmcentralen-spelet\.se|operatorratunkowy\.pl|operatore112\.it|operateur112\.fr|dispetcher112\.ru|alarmcentral-spil\.dk|nodsentralspillet\.com|operacni-stredisko\.cz|112-merkez\.com|jogo-operador112\.com|operador193\.com|centro-de-mando\.mx|dyspetcher101-game\.com|missionchief-korea\.com|missionchief-japan\.com|jocdispecerat112\.com)\/.*$/
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/missionspeed.user.js
@@ -39,9 +39,9 @@
                 break;
             case 6: $('#mspa').toggleClass("btn-success btn-warning");
                 break;
-            case 7: $('#mspa').toggleClass("btn-success btn-warning");
+            case 7: $('#msf').toggleClass("btn-success btn-warning");
                 break;
-            case 8: $('#mspa').toggleClass("btn-success btn-warning");
+            case 8: $('#mssb').toggleClass("btn-success btn-warning");
                 break;
         }
     }
