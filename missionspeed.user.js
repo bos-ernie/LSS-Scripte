@@ -1,92 +1,135 @@
 // ==UserScript==
 // @name         MissionSpeed
-// @version      2.1.4
+// @description  set dynamically the period between your missions
+// @version      3.0.0
 // @author       Allure149
-// @include      /^https?:\/\/[www.]*(?:leitstellenspiel\.de|missionchief\.co\.uk|missionchief\.com|meldkamerspel\.com|centro-de-mando\.es|missionchief-australia\.com|larmcentralen-spelet\.se|operatorratunkowy\.pl|operatore112\.it|operateur112\.fr|dispetcher112\.ru|alarmcentral-spil\.dk|nodsentralspillet\.com|operacni-stredisko\.cz|112-merkez\.com|jogo-operador112\.com|operador193\.com|centro-de-mando\.mx|dyspetcher101-game\.com|missionchief-korea\.com|missionchief-japan\.com|jocdispecerat112\.com)\/.*$/
+// @match        https://www.leitstellenspiel.de/
+// @match        https://polizei.leitstellenspiel.de/
+// @match        https://www.missionchief.com/
+// @match        https://police.missionchief.com/
+// @match        https://www.missionchief.co.uk/
+// @match        https://police.missionchief.co.uk/
+// @match        https://www.missionchief-australia.com/
+// @match        https://police.missionchief-australia.com/
 // @updateURL    https://github.com/types140/LSS-Scripte/raw/master/missionspeed.user.js
+// @downloadURL  https://github.com/types140/LSS-Scripte/raw/master/missionspeed.user.js
 // @grant        none
 // ==/UserScript==
-/* global $ */
+/* global $, I18n, mission_speed, user_premium */
 
 
 (function() {
     'use strict';
 
+    //
+    // configuration for grouping buttons
+    // (could result into pushing the buttons one line down)
+    //
+    // true = buttons should be grouped
+    // false = buttons should NOT be grouped
+    // standard: true
+    //
+    const group_buttons = true;
+
+    //
+    // lists all possible periods for generating missions
+    //
+    // the order here reflects the order of buttons in the game!!
+    // new entries are to be made as follows (copy the lines to be sure!):
+    //{
+    //    mode: "<name of the new mode according to the overview in the game>",
+    //    number: <number of speed (read from the URL of the speed)>,
+    //    id: "<free to choose>",
+    //    secs: <seconds count up to the next mission>,
+    //    icon: "<name of the icon without the preceding 'glyphicon glyphicon-' (see https://getbootstrap.com/docs/3.3/components/)>",
+    //    premium: <if premium is neccessary for this mode du be used, written as true (yes) or false (no)>
+    //},
+    //
+    // descriptions in <...> inclusive the characters needs to be replaced!
+    //
+    const periods = [
+        { mode: "Pause", number: 6, id: "mspa", secs: 0, icon: "pause", premium: false },
+        { mode: "Extra langsam", number: 5, id: "msfb", secs: 600, icon: "fast-backward", premium: false },
+        { mode: "Langsamer", number: 8, id: "mssb", secs: 420, icon: "step-backward", premium: false },
+        { mode: "Langsam", number: 4, id: "msb", secs: 300, icon: "backward", premium: false },
+        { mode: "Realistisch", number: 0, id: "mspl", secs: 180, icon: "play", premium: false },
+        { mode: "Semi-Realistisch", number: 7, id: "msf", secs: 120, icon: "forward", premium: false },
+        { mode: "Normal", number: 1, id: "mssf", secs: 60, icon: "step-forward", premium: false },
+        { mode: "Schnell", number: 2, id: "msff", secs: 30, icon: "fast-forward", premium: false },
+        { mode: "Turbo", number: 3, id: "msvf", secs: 20, icon: "plane", premium: true },
+    ];
+
+    //
+    // translations
+    // the format should be self explaining
+    // for detailed language codes see: https://github.com/types140/LSS-Scripte/blob/master/translate/lang.js
+    const msLang = {
+        de_DE: { sec: "Sekunde", secs: "Sekunden", min: "Minute", mins: "Minuten" },
+        en_US: { sec: "Second", secs: "Seconds", min: "Minute", mins: "Minutes" },
+        en_GB: { sec: "Second", secs: "Seconds", min: "Minute", mins: "Minutes" },
+        en_AU: { sec: "Second", secs: "Seconds", min: "Minute", mins: "Minutes" },
+    };
+
+    // ########################################
+    // Don't change anything from here except
+    // you really know what you are doing!!!
+    // ########################################
+
+    let currentTimeId = "";
+
     if($('#search_input_field_missions').length != 0){
-        $('#search_input_field_missions').before(`<div id="missionSpeed" class="btn-group">
-                                                      <a id="mspa" class="btn btn-xs btn-success" title="Pause"><div class="glyphicon glyphicon-pause"></div></a>
-                                                      <a id="msfb" class="btn btn-xs btn-success" title="10 Minuten"><div class="glyphicon glyphicon-fast-backward"></div></a>
-                                                      <a id="mssb" class="btn btn-xs btn-success" title="7 Minuten"><div class="glyphicon glyphicon-step-backward"></div></a>
-                                                      <a id="msb" class="btn btn-xs btn-success" title="5 Minuten"><div class="glyphicon glyphicon-backward"></div></a>
-                                                      <a id="mspl" class="btn btn-xs btn-success" title="3 Minuten"><div class="glyphicon glyphicon-play"></div></a>
-                                                      <a id="msf" class="btn btn-xs btn-success" title="2 Minuten"><div class="glyphicon glyphicon-forward"></div></a>
-                                                      <a id="mssf" class="btn btn-xs btn-success" title="1 Minute"><div class="glyphicon glyphicon-step-forward"></div></a>
-                                                      <a id="msff" class="btn btn-xs btn-success" title="30 Sekunden"><div class="glyphicon glyphicon-fast-forward"></div></a>
-                                                      <a id="msvf" class="btn btn-xs btn-success" title="20 Sekunden"><div class="glyphicon glyphicon-plane"></div></a>
-                                                  </div>`);
-        switch(mission_speed){
-            case 0: $('#mspl').toggleClass("btn-success btn-warning");
-                break;
-            case 1: $('#msf').toggleClass("btn-success btn-warning");
-                break;
-            case 2: $('#msff').toggleClass("btn-success btn-warning");
-                break;
-            case 3: $('#msvf').toggleClass("btn-success btn-warning");
-                break;
-            case 4: $('#msb').toggleClass("btn-success btn-warning");
-                break;
-            case 5: $('#msfb').toggleClass("btn-success btn-warning");
-                break;
-            case 6: $('#mspa').toggleClass("btn-success btn-warning");
-                break;
-            case 7: $('#msf').toggleClass("btn-success btn-warning");
-                break;
-            case 8: $('#mssb').toggleClass("btn-success btn-warning");
-                break;
+        $('#search_input_field_missions').before(`<div id="missionSpeed"></div>`);
+        if(group_buttons) $("#missionSpeed").addClass("btn-group");
+
+        for(const time of periods){
+            // som = seconds or minutes
+
+            // convert seconds to minutes
+            const somNumber = time.secs >= 60 ? time.secs / 60 : time.secs;
+
+            // if seconds > 60 the word "minutes" is used, otherwise "seconds"
+            // if seconds or minutes > 1 then use plural words
+            let somDescription = function(){
+                if(time.secs < 60){
+                    if(time.secs === 1) return msLang[I18n.locale].sec;
+                    else return msLang[I18n.locale].secs;
+                } else {
+                    if(time.secs / 60 === 1) return msLang[I18n.locale].min;
+                    else return msLang[I18n.locale].mins;
+                }
+            };
+
+            // save the id of the current used speed
+            currentTimeId = time.number === mission_speed ? time.id : "";
+
+            $("#missionSpeed").append(`<span id="${time.id}" title="${somNumber} ${somDescription()}" class="btn btn-xs btn-${time.number === mission_speed ? "warning" : "success"} glyphicon glyphicon-${time.icon}"></span>`);
         }
     }
 
-    if($('#mission_speed_pause').length != 0) $('#mission_speed_pause').remove();
+    // suppress preceded Pause-Button
+    if($("#mission_speed_pause").length != 0) $("#mission_speed_pause").remove();
 
-    $('#mspa, #msfb, #mssb, #msb, #mspl, #msf, #mssf, #msff, #msvf').on('click', function(){
-        var clickedId = $(this).attr('id');
+    $("#missionSpeed").on('click', function(e){
+        const el = e.target;
 
-        switch(clickedId){
-            case "mspa": $.get('/missionSpeed?speed=6');
-                         mission_speed = 6;
-                break;
-            case "msfb": $.get('/missionSpeed?speed=5');
-                         mission_speed = 5;
-                break;
-            case "mssb": $.get('/missionSpeed?speed=8');
-                         mission_speed = 8;
-                break;
-            case "msb": $.get('/missionSpeed?speed=4');
-                         mission_speed = 4;
-                break;
-            case "mspl": $.get('/missionSpeed?speed=0');
-                         mission_speed = 0;
-                break;
-            case "msf": $.get('/missionSpeed?speed=7');
-                         mission_speed = 7;
-                break;
-            case "mssf": $.get('/missionSpeed?speed=1');
-                         mission_speed = 1;
-                break;
-            case "msff": $.get('/missionSpeed?speed=2');
-                         mission_speed = 2;
-                break;
-            case "msvf": if(user_premium){
-                             $.get('/missionSpeed?speed=3');
-                             mission_speed = 3;
-                         } else {
-                             return false;
-                         }
-                break;
-        }
+        // select new period from the "database"
+        const newTime = periods.find(e => e.id === el.id);
 
-        $('#mspa, #msfb, #mssb, #msb, #mspl, #msf, #mssf, #msff, #msvf').removeClass().addClass('btn btn-xs btn-success');
+        // if the periodmode needs premium and the player doesn't have it the period doesn't need to be set
+        if(newTime.premium && !user_premium) return;
 
-        $('#' + clickedId).toggleClass('btn-success btn-warning');
+        $.get(`/missionSpeed?speed=${newTime.number}`, function(){
+            // select new speed (as an orange button)
+            $(el).toggleClass('btn-success btn-warning');
+
+            // deselect old speed
+            $(`#${currentTimeId}`).toggleClass('btn-success btn-warning');
+
+            // notice new speed ID
+            currentTimeId = newTime.id;
+
+            // the local saved, generated by the system, needs also to be updated
+            mission_speed = newTime.number;
+        });
     });
 })();
