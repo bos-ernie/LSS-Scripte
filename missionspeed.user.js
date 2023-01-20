@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         MissionSpeed
 // @description  set dynamically the period between your missions
-// @version      3.0.0
+// @version      3.0.1
 // @author       Allure149
 // @match        https://www.leitstellenspiel.de/
 // @match        https://polizei.leitstellenspiel.de/
@@ -100,7 +100,9 @@
             };
 
             // save the id of the current used speed
-            currentTimeId = time.number === mission_speed ? time.id : "";
+            if(time.number === mission_speed){
+                currentTimeId = time.id;
+            }
 
             $("#missionSpeed").append(`<span id="${time.id}" title="${somNumber} ${somDescription()}" class="btn btn-xs btn-${time.number === mission_speed ? "warning" : "success"} glyphicon glyphicon-${time.icon}"></span>`);
         }
