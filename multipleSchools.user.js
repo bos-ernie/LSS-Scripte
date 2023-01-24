@@ -192,6 +192,45 @@
                 $("#multipleClassesOutput").text(`${school.name} wurde über ${usedClasses} ${(usedClasses==1?"neuen Lehrgang":"neue Lehrgänge")} informiert.`);
             });
 
+            if (usedClasses > 0) {
+                let sessionStorageKey = "aBuildings";
+                let usedBuilding = JSON.parse(
+                    sessionStorage.getItem("aBuildings")
+                ).value.find((b) => b.id === school.id);
+
+              if (!usedBuilding) {
+                  sessionStorageKey = "aAllianceBuildings";
+        
+                  usedBuilding = JSON.parse(
+                      sessionStorage.getItem("aAllianceBuildings")
+                  ).value.find((b) => b.id === school.id);
+              }
+
+              if (!usedBuilding) {
+                  console.warn("usedBuilding not found", school.id);
+                  continue;
+              }
+
+              for (let i = 0; i < usedClasses; i++) {
+                  usedBuilding.schoolings.push({
+                      id: "pseudo" + Math.random(),
+                      education_id: education,
+                      education: "unknown",
+                      education_start_time: new Date().toISOString(),
+                      education_end_time: "2099-12-31T22:59:59+01:00",
+                  });
+              }
+
+              sessionStorage.setItem(
+                  sessionStorageKey,
+                  JSON.stringify({
+                      value: JSON.parse(
+                          sessionStorage.getItem(sessionStorageKey)
+                      ).value.map((b) => (b.id === school.id ? usedBuilding : b)),
+                  })
+              );
+            }
+
             classCounter -= school.free;
             if(classCounter <= 0) break;
         }
